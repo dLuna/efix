@@ -4,7 +4,10 @@
 
 -module(fix).
 -author('Daniel Luna <daniel@lunas.se>').
--export([decode/1]).
+-export([decode/1, start/0]).
 
 decode(String) ->
   throw(not_yet_implemented).
+
+start() ->
+  ok.
