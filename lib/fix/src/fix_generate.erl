@@ -55,26 +55,8 @@ name(Key, L) ->
   Result#xmlElement.content.
 
 header_parser(Xml = #xmlElement{}) ->
-  [header(Element, Xml) || #xmlElement{name = field} = Element <-
-                             name(header, Xml)].
-
-header(E = #xmlElement{}, Xml) ->
-  Name = attr(name, E),
-  FieldTypeData = field_type_data(Name, Xml),
-  N = attr(number, FieldTypeData),
-  Type = attr(type, FieldTypeData),
-  AtomName = field_name_to_atom(Name),
-  Enum = [Enu || #xmlElement{name = value} = Enu <-
-                   FieldTypeData#xmlElement.content],
-  ["header(\"", N, "=\" ++ String, Acc) ->\n"
-   "  {FieldData0, Rest} = fix_read_data:", version_atom(Xml), "(",
-   to_lower(Type), ", String),\n",
-   case Enum of
-     [] -> "  FieldData = FieldData0,\n";
-     _ ->
-       ["  FieldData = enum_to_value(", N, ", FieldData0),\n"]
-   end,
-   "  header(Rest, [{", AtomName, ", FieldData} | Acc]);\n"].
+  [single_field_parser("header", Element, Xml) ||
+    #xmlElement{name = field} = Element <- name(header, Xml)].
    
 field_name_to_atom([C | Rest]) ->
   [C + 32 | remove_camel_case(Rest)].
@@ -116,13 +98,12 @@ message_dispatch(Name, _Xml) ->
 
 message_handler(Msg, Xml) ->
   MsgName = field_name_to_atom(attr(name, Msg)),
-  [[single_message(MsgName, Field, Xml) 
+  [[single_field_parser(MsgName, Field, Xml) 
     || #xmlElement{name = field} = Field <- Msg#xmlElement.content],
    MsgName, "(Rest, Acc) ->\n"
    "  {Rest, Acc}.\n"].
 
-
-single_message(MsgName, Field, Xml) ->
+single_field_parser(MsgName, Field, Xml) ->
   FieldName = attr(name, Field),
   FieldTypeData = field_type_data(FieldName, Xml),
   N = attr(number, FieldTypeData),

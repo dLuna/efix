@@ -117,4 +117,8 @@ Working on handling body parsing.  And enum handling.
 The more I write the more I understand why I did not want to write
 this in XSLT.  It's bad enough in Erlang.  :-)
 
+17:32
 
+Yay!  Code builds again.
+
+Next step is to do some cleanup befor continuing.
