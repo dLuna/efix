@@ -24,15 +24,14 @@ $(d)/../ebin/%.d: $(d)/%.erl
 
 .SECONDEXPANSION:
 $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
-	  $(d)/../ebin/fix_generate.beam \
-	  $(d)/Rules.mk
+	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate generate $(<) \
 	  -s erlang halt > $(@)
 
 TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d))
 CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d))
 
-$(TGTS_$(d)):	build/Rules.src.mk
+$(TGTS_$(d)):	$(d)/Rules.mk
 
 # POP
 -include	$(DEPS_$(d))
