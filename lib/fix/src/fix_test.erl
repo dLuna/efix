@@ -18,8 +18,10 @@ run(RootDir) ->
   Results = [test(File) || File <- Files],
   ok = file:write_file("full_test_results.txt",
                        io_lib:format("~p", [Results])),
-  [{File, length(lists:filter(fun(Res) -> Res =:= ok end, Ress))
-    * 100 div length(Ress)} || {File, Ress} <- Results].
+  [io:format("~s: ~p~n",
+             [File,
+              length(lists:filter(fun(Res) -> Res =:= ok end, Ress))
+              * 100 div length(Ress)]) || {File, Ress} <- Results].
 
 test(Filename) ->
   {ok, Dev} = file:open(Filename, read),
