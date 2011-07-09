@@ -10,28 +10,30 @@
 
 generate(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
-  Version = version(Xml),
-  Header =
-    ["%% -*- erlang-indent-level: 2 -*-\n"
-     "%% @author Daniel Luna <daniel@lunas.se>\n"
-     "%% @copyright 2011 Daniel Luna\n\n"
-     "-module(", string:to_lower(Version),
-     ").\s"
-     "-author('Daniel Luna <daniel@lunas.se>').\n"
-     "-export([decode/1]).\n",
+  %% FIXME: This is ugly, but works in a directory independent way
+  %% most of the time.
+  MI = module_info(),
+  {value, {compile, Compile}} = lists:keysearch(compile, 1, MI),
+  {value, {source, Source}} = lists:keysearch(source, 1, Compile),
+  {ok, Bin} = file:read_file(filename:dirname(Source) ++ "/fix_generate.aux"),
+  Parser = binary_to_list(Bin),
+  Result = set_values(Parser, Xml),
+  io:format("~s", [Result]).
 
-     "decode(_) -> ok."],
+set_values([], _) -> [];
+set_values("%%VERSIONATOM%%" ++ Rest, Xml) ->
+  [version_atom(Xml), set_values(Rest, Xml)];
+set_values([C | Rest], Xml) ->
+  [C | set_values(Rest, Xml)].
 
-  io:format("~s", [Header]).
-
-version(#xmlElement{attributes = Attrs}) ->
+version_atom(#xmlElement{attributes = Attrs}) ->
   lists:flatten(
-    [attr(type, Attrs),
+    ["fix",
      attr(major, Attrs),
      attr(minor, Attrs),
      case attr(servicepack, Attrs) of
        "0" -> [];
-       SP -> ["SP", SP]
+       SP -> ["sp", SP]
      end]).
 
 attr(Key, L) ->

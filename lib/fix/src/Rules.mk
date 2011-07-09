@@ -24,7 +24,7 @@ $(d)/../ebin/%.d: $(d)/%.erl
 
 .SECONDEXPANSION:
 $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
-	  $(d)/../ebin/fix_generate.beam
+	  $(d)/../ebin/fix_generate.beam $(d)/fix_generate.aux
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate generate $(<) \
 	  -s erlang halt > $(@)
 
