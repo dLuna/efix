@@ -15,7 +15,8 @@ decode(String) ->
     "8=FIX.4.4" ++ [1] ++ _ -> fix44:decode(String);
     "8=FIX.5.0" ++ [1] ++ _ -> fix50:decode(String);
     "8=FIX.5.0SP1" ++ [1] ++ _ -> fix50sp1:decode(String);
-    "8=FIX.5.0SP2" ++ [1] ++ _ -> fix50sp2:decode(String)
+    "8=FIX.5.0SP2" ++ [1] ++ _ -> fix50sp2:decode(String);
+    "8=FIXT.1.1" ++ [1] ++ _ -> fixt11:decode(String)
   end.
 
 start() ->
