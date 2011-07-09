@@ -70,3 +70,10 @@ Have a decent test script up and running.
 People at the bar are very happy.  So am I, if for a completely
 different reason. (Local time is 23:00)
 
+Writing more fix_generate stuff.  Not really doing any progress.  This
+has to change.
+
+04:43
+
+Headers can now be parsed in theory.  But only if they are
+typeless. :-)

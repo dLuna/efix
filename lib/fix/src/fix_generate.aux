@@ -8,4 +8,8 @@
 -export([decode/1]).
 
 decode(FIX0) ->
-  ok.
+  {FIX1, Header} = header(FIX0, []),
+  Header.
+
+%%HEADERPARSER%%header(Rest, Acc) ->
+  {Rest, Acc}.

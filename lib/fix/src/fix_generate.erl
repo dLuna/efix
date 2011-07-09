@@ -23,19 +23,64 @@ generate(XmlFile) ->
 set_values([], _) -> [];
 set_values("%%VERSIONATOM%%" ++ Rest, Xml) ->
   [version_atom(Xml), set_values(Rest, Xml)];
+set_values("%%HEADERPARSER%%" ++ Rest, Xml) ->
+  [header_parser(Xml), set_values(Rest, Xml)];
 set_values([C | Rest], Xml) ->
   [C | set_values(Rest, Xml)].
 
-version_atom(#xmlElement{attributes = Attrs}) ->
+version_atom(Xml) ->
   lists:flatten(
-    ["fix",
-     attr(major, Attrs),
-     attr(minor, Attrs),
-     case attr(servicepack, Attrs) of
+    [to_lower(attr(type, Xml)),
+     attr(major, Xml),
+     attr(minor, Xml),
+     case attr(servicepack, Xml) of
        "0" -> [];
        SP -> ["sp", SP]
      end]).
 
+attr(Key, #xmlElement{attributes = Attrs}) -> attr(Key, Attrs);
 attr(Key, L) ->
-  {value, Result} = lists:keysearch(Key, 2, L),
+  {value, Result} = lists:keysearch(Key, #xmlAttribute.name, L),
   Result#xmlAttribute.value.
+
+name(Key, #xmlElement{content = Content}) -> name(Key, Content);
+name(Key, L) ->
+  {value, Result} = lists:keysearch(Key, #xmlElement.name, L),
+  Result#xmlElement.content.
+
+header_parser(Xml = #xmlElement{}) ->
+  [header(Element, Xml) || #xmlElement{name = field} = Element <-
+                             name(header, Xml)].
+
+header(E = #xmlElement{}, Xml) ->
+  Name = attr(name, E),
+  Field = with_attr_value(name, Name, name(fields, Xml)),
+  N = attr(number, Field),
+  Type = attr(type, Field),
+  ["header(\"", N, "=\" ++ String, Acc) ->\n"
+   "  {FieldData, Rest} = fix_read_data:", version_atom(Xml), "(",
+   to_lower(Type), ", String),\n"
+   "  header(Rest, [{", field_name_to_atom(Name), ", FieldData} | Acc]);\n"].
+   
+field_name_to_atom([C | Rest]) ->
+  [C + 32 | remove_camel_case(Rest)].
+
+remove_camel_case([C | Rest]) when C >= $A, C =< $Z ->
+  [$_, C + 32 | remove_camel_case(Rest)];
+remove_camel_case([C | Rest]) -> 
+  [C | remove_camel_case(Rest)];
+remove_camel_case([]) -> [].
+
+to_lower([C | Rest]) when C >= $A, C =< $Z ->
+  [C + 32 | to_lower(Rest)];
+to_lower([C | Rest]) ->
+  [C | to_lower(Rest)];
+to_lower([]) -> [].
+
+with_attr_value(Attr, Value, Content) ->
+  case [Element || #xmlElement{attributes = Attributes} = Element <- Content,
+                   attr(Attr, Attributes) =:= Value] of
+    [] -> throw({Attr, Value, Content});
+    [V] -> V
+  end.
+      
