@@ -3720,7 +3720,7 @@
   <field number='457' name='NoUnderlyingSecurityAltID' type='NUMINGROUP' />
   <field number='458' name='UnderlyingSecurityAltID' type='STRING' />
   <field number='459' name='UnderlyingSecurityAltIDSource' type='STRING' />
-  <field number='460' name='Product' type='INT '>
+  <field number='460' name='Product' type='INT'>
    <value enum='8' description='LOAN' />
    <value enum='12' description='OTHER' />
    <value enum='11' description='MUNICIPAL' />
