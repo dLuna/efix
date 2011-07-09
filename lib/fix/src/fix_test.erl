@@ -25,7 +25,7 @@ run(RootDir) ->
 
 test(Filename) ->
   {ok, Dev} = file:open(Filename, read),
-  {Filename, by_line(file:read_line(Dev), Dev)}.
+  {lists:flatten(Filename), by_line(file:read_line(Dev), Dev)}.
 
 by_line({ok, "I" ++ Line}, Dev) ->
   [parse_result(Line) | by_line(file:read_line(Dev), Dev)];
@@ -40,7 +40,9 @@ parse_result(Line0) ->
       [$\n | Rest ] -> lists:reverse(Rest);
       _ -> Line0 %% Only possible for the last line in file.
     end,
-  Line = add_ts(Line1),
+  Line2 = add_ts(Line1),
+  Line3 = clean(Line2),
+  Line = set_checksum(Line3),
   try
     fix:decode(Line),
     ok
@@ -51,15 +53,48 @@ parse_result(Line0) ->
 
 add_ts("<TIME>" ++ Rest) ->
   timestamp() ++ add_ts(Rest);
+add_ts("<TIME+" ++ Rest0) ->
+  {Add, Rest} = get_nums(Rest0, []),
+  timestamp(Add) ++ add_ts(Rest);
+add_ts("<TIME-" ++ Rest0) ->
+  {Remove, Rest} = get_nums(Rest0, []),
+  timestamp(-Remove) ++ add_ts(Rest);
 add_ts("00000000-" ++ Rest) -> "20110707-" ++ add_ts(Rest);
 add_ts([C | Rest]) -> [C | add_ts(Rest)];
 add_ts([]) -> [].
 
+get_nums([$> | Rest], Acc) -> {list_to_integer(lists:reverse(Acc)), Rest};
+get_nums([C | Rest], Acc) -> get_nums(Rest, [C | Acc]).
+
 timestamp() ->
-  {{YYYY, MM, DD}, {Hour, Min, Sec}} = erlang:localtime(),
+  timestamp(0).
+
+timestamp(Diff) ->
+  {{YYYY, MM, DD}, {Hour, Min, Sec}} =
+    calendar:gregorian_seconds_to_datetime(
+      calendar:datetime_to_gregorian_seconds(erlang:localtime()) + Diff),
   lists:flatten(io_lib:format("~4..0w~2..0w~2..0w-~2..0w:~2..0w:~2..0w",
                               [YYYY, MM, DD, Hour, Min, Sec])).
 
 pp([]) -> [];
 pp([1 | Rest]) -> "SOH" ++ pp(Rest);
 pp([C | Rest]) -> [C | pp(Rest)].
+
+clean("1," ++ Rest) -> Rest;
+clean("2," ++ Rest) -> Rest;
+clean(Rest) -> Rest.
+
+set_checksum(Line) ->
+  case lists:reverse(Line) of
+    [1, $0, $=, $0, $1 | Enil] ->
+      CS = integer_to_list(lists:sum(Enil) rem 256),
+      CSString = add_zeroes(CS),
+      lists:reverse(Enil) ++ "10=" ++ CSString ++ [1];
+    _ ->
+      Line
+  end.
+
+add_zeroes([C]) -> [$0, $0, C];
+add_zeroes([C1, C2]) -> [$0, C1, C2];
+add_zeroes([C1, C2, C3]) -> [C1, C2, C3].
+

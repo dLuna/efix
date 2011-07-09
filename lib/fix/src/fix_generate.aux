@@ -11,11 +11,29 @@ decode(FIX0) ->
   {FIX1, Header} = header(FIX0, []),
   {FIX2, Message} = message(lks(msg_type, Header), FIX1),
   Trailer = trailer(FIX2, []),
+  check_checksum(FIX0, lks(check_sum, Trailer)),
   Header ++ Message ++ Trailer.
 
 lks(Key, List) ->
   {value, {Key, Value}} = lists:keysearch(Key, 1, List),
   Value.
+
+check_checksum(All, CheckSum) ->
+  List = lists:sublist(All, length(All) - 7),
+  Sum = lists:sum(List) rem 256,
+  %% Early versions of the FIX protocol has the checksum field as a
+  %% string
+  CS = case CheckSum of
+         _ when is_list(CheckSum) ->
+           list_to_integer(CheckSum);
+         _ when is_integer(CheckSum) ->
+           CheckSum
+       end,
+  case CS =:= Sum of
+    true -> ok;
+    false ->
+      throw({invalid_checksum, CS, Sum})
+  end.
 
 %%HEADERPARSER%%
 
