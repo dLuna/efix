@@ -115,9 +115,25 @@ generate_enum_to_value(Xml) ->
 
 generate_enum_to_value_field(Field) ->
   N = attr(number, Field),
-  [["enum_to_value(\"", N, "\", \"", attr(enum, Enum), "\") ->\n"
-    "  ", quote_atom(string:to_lower(attr(description, Enum))), ";\n"] ||
-    #xmlElement{name = value} = Enum <- Field#xmlElement.content].
+  case [E || #xmlElement{name = value} = E <- Field#xmlElement.content] of
+    [] -> [];
+    Enums ->
+      Quote = case attr(type, Field) of
+                "CHAR" -> $";
+                "STRING" -> $";
+                %% FIXME: Some of these need completely different
+                %% handling
+                "MULTIPLESTRINGVALUE" -> $";
+                "MULTIPLEVALUESTRING" -> $";
+                "MULTIPLECHARVALUE" -> $";
+                "BOOLEAN" -> $";
+                "NUMINGROUP" -> [];
+                "INT" -> []
+              end,
+      [["enum_to_value(\"", N, "\", ", Quote, attr(enum, E), Quote, ") ->\n"
+        "  ", quote_atom(string:to_lower(attr(description, E))), ";\n"] ||
+        E <- Enums]
+  end.
 
 %% XML helper functions:
 

@@ -142,3 +142,6 @@ Crap.
 Other problem is that I'm currently only matching enums which are
 strings.  Need to look at the type when I generate the code.
 
+20:42
+
+Food.
