@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ERL=@ERL@
+OTP=@ERLDIR@
+ROOTDIR=@ROOTDIR@
+LIBPATH="${ROOTDIR}/lib/*/ebin ${ROOTDIR}/patches"
+sname="$$"
+
+erlargs="-pa ${LIBPATH} ${xpath} -boot start_sasl -sname ${sname} \
+-s fix"
+exec "$ERL" ${erlargs}

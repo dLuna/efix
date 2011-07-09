@@ -1,0 +1,4 @@
+ERL_DIR:=@ERLDIR@
+ERL:=@ERL@
+ERLC:=@ERLC@
+ERL_C_INCLUDE_DIR:=@ERLDIR@/usr/include

@@ -1,0 +1,22 @@
+AC_INIT
+
+AC_PATH_PROG(ERL, erl, erl)
+AC_PATH_PROG(ERLC, erlc, erlc)
+
+ROOTDIR=$(dirname `pwd`)
+AC_SUBST(ROOTDIR)
+
+ERLDIR=`awk -F= '/ROOTDIR=/ { print [$]2; exit; }' $ERL`
+AC_SUBST(ERLDIR)
+
+define(OUTPUT_FILES,
+	path.mk
+        ../bin/run
+)dnl
+
+AC_OUTPUT(OUTPUT_FILES,
+[
+date > _tstamp_h
+echo "OUTPUT_FILES" | sed 's,^ *,build/,' | sed 's,build/$,,' > _gen_files
+chmod u+x ../bin/run
+])dnl
