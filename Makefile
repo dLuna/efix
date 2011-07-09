@@ -9,7 +9,7 @@ all: targets build/config.status
 
 # The test target
 .PHONY: test
-test: all run_test
+test: all run_tests
 
 # Autoconf & configure
 CONFIG_GEN_FILES = $(shell cat build/_gen_files 2>/dev/null)
@@ -60,6 +60,9 @@ $(ERL_INCLUDE_FILES): $$(notdir $$@)
 vpath %.hrl $(wildcard $(ERL_DIR)/lib/*/*)
 
 # The variables TGT_* and CLEAN are added to by rules in Rules.*.mk
+.PHONY: run_tests
+run_tests: $(TGT_TEST)
+
 .PHONY: targets
 targets: $(TGT_BIN) $(TGT_SBIN) $(TGT_ETC) $(TGT_LIB)
 
