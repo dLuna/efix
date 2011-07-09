@@ -93,3 +93,18 @@ celebrate with a beer, except I just drank a Vodka-Coke.
 07:08
 
 Heading for bed.  (Local time is 03:08)
+
+14:51
+
+Computer up and running.  Eating breakfast.
+
+Downloading specifications from the FIX webpage.  The definition of
+data types change over versions.
+
+16:43
+
+The more I read my code the more I think that xmerl must have
+functionality for what I do with list comprehension.  I wonder if that
+would look as ugly, worse, or better.
+
+Working on handling body parsing.  And enum handling.
