@@ -17,3 +17,14 @@ In no particular order or priority:
 
 * I suspect that my code will hande repeating sequences badly.
   Test/fix.
+
+
+THING THAT ARE OUT OF SCOPE:
+
+Most of these are out of scope since they need some sort of
+(semi-)permanent storage.  The parser is an over-approximation of the
+full FIX protocol.
+
+* Checking of sequence numbers
+
+* Checking user credentials

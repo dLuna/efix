@@ -159,7 +159,10 @@ enum_str(N, Enum, Desc) ->
   ["enum_to_value(\"", N, "\", \"", Enum, "\") ->\n"
    "  ", Desc, ";\n"].
 
+quote_atom("and") -> "'and'";
+quote_atom("or") -> "'or'";
 quote_atom("receive") -> "'receive'";
+quote_atom("query") -> "'query'";
 quote_atom([C | Rest]) when C < $a orelse C > $z ->
   [$', C, Rest, $'];
 quote_atom(String) ->

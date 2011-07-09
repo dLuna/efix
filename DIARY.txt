@@ -6,6 +6,11 @@ evening.
 
 Sitting in the bar of the hostel where I live.
 
+I realise that I have a lot of functions that could use an accumulator
+and be tail recursive.  They run in constant time so I can't be
+bothered.  I.e. it's only the code generator that has that type of
+code, and the XML files are a known constant size.
+
 2011-07-09 00:00
 
 Creating directory structury.
@@ -108,3 +113,8 @@ functionality for what I do with list comprehension.  I wonder if that
 would look as ugly, worse, or better.
 
 Working on handling body parsing.  And enum handling.
+
+The more I write the more I understand why I did not want to write
+this in XSLT.  It's bad enough in Erlang.  :-)
+
+
