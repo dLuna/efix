@@ -59,3 +59,5 @@ Commiting a code generator that generate files that compile. YAY!
 
 Milestone 1 reached.
 
+Second half of Peru vs. Mexico in Copa America is about to start.
+
