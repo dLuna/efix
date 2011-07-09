@@ -61,3 +61,6 @@ Milestone 1 reached.
 
 Second half of Peru vs. Mexico in Copa America is about to start.
 
+Starting to write a test script.
+
+
