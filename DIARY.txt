@@ -122,3 +122,23 @@ this in XSLT.  It's bad enough in Erlang.  :-)
 Yay!  Code builds again.
 
 Next step is to do some cleanup befor continuing.
+
+18:58
+
+Basice cleanup done.  Code starts to be readable.
+
+Working furnther on creating a parser for the trailer. Three lines of
+code.  I love code reuse.  That's why the cleanup was good.
+
+20:39
+
+Unfortunately I've done some assumptions on typing which was a bit
+bad.  Fixed but doesn't work for FIXT.  The reason is that FIXT has
+the header/trailer defined in the fixt xml file while the message body
+is in fixt50*.xml.
+
+Crap.
+
+Other problem is that I'm currently only matching enums which are
+strings.  Need to look at the type when I generate the code.
+
