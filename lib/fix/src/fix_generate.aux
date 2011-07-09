@@ -13,7 +13,9 @@ decode(FIX0) ->
   Footer = footer(FIX2, []),
   Header ++ Message ++ Footer.
 
-lks(Key, List) -> {value, Value} = lists:keysearch(Key, List), Value.
+lks(Key, List) ->
+  {value, {Key, Value}} = lists:keysearch(Key, 1, List),
+  Value.
 
 %%HEADERPARSER%%header(Rest, Acc) ->
   {Rest, Acc}.
