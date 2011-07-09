@@ -1,0 +1,16 @@
+On most machines with Erlang and standard build tools in the path you
+should be able to do:
+
+> make
+> bin/run
+
+and have a system up and running.
+
+There is not really any way to install the system.  Just run it as it
+is.
+
+Dependencies are:
+
+GNU make 3.81 or later
+autoconf
+Erlang (don't know if there are version dependencies, I'm using R14B)
