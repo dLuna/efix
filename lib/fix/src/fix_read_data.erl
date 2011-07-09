@@ -4,7 +4,7 @@
 
 -module(fix_read_data).
 -author('Daniel Luna <daniel@lunas.se>').
--export([fix40/2]).
+-export([fix40/2, fix41/2, fix42/2, fix43/2, fix44/2, fixt11/2]).
 
 -define(SOH, 1).
 
@@ -17,6 +17,20 @@ fix40(char, Data) -> string(Data);
 fix40(int, Data) -> int(Data);
 fix40(time, Data) -> time(Data);
 fix40(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
+
+fix41(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
+fix42(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
+fix43(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
+fix44(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
+
+fixt11(int, Data) -> int(Data);
+fixt11(length, Data) -> int(Data); %% length_(Data);
+fixt11(tagnum, Data) -> int(Data); %% tagnum(Data);
+fixt11(seqnum, Data) -> int(Data); %% seqnum(Data);
+fixt11(numingroup, Data) -> int(Data); %% numingroup(Data);
+fixt11(string, Data) -> string(Data);
+fixt11(utctimestamp, Data) -> time(Data);
+fixt11(Type, Data) -> throw({not_yet_implemented_type, Type, Data}).
 
 string(Data) -> string(Data, []).
 
