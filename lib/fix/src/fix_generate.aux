@@ -9,7 +9,18 @@
 
 decode(FIX0) ->
   {FIX1, Header} = header(FIX0, []),
-  Header.
+  {FIX2, Message} = message(lks(msg_type, Header), FIX1),
+  Footer = footer(FIX2, []),
+  Header ++ Message ++ Footer.
+
+lks(Key, List) -> {value, Value} = lists:keysearch(Key, List), Value.
 
 %%HEADERPARSER%%header(Rest, Acc) ->
   {Rest, Acc}.
+
+%%MESSAGEPARSER%%
+
+%%FOOTERPARSER%%footer("", Acc) ->
+  Acc.
+
+%%ENUM_TO_VALUE%%
