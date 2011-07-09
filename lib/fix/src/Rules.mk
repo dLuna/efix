@@ -28,6 +28,15 @@ $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate generate $(<) \
 	  -s erlang halt > $(@)
 
+TGT_TEST_$(d)	:= $(d)/fix_test
+
+.PHONY: $(d)/fix_test
+$(d)/fix_test: 
+	$(ERL) -pa $(@D)/../ebin -noshell -run fix_test run \
+	  $(@D)/../priv/test/ -s erlang halt
+
+TGT_TEST	:= $(TGT_TEST) $(TGT_TEST_$(d))
+
 TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d))
 CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d))
 
