@@ -4,8 +4,10 @@ dirstack_$(sp)	:= $(d)
 d		:= $(dir)
 
 # Subdirectories
-dir	:= $(d)/src
+dir		:= $(d)/src
 include		build/Rules.src.mk
+dir		:= $(d)/priv
+include		$(dir)/Rules.mk
 
 $(TGTS_$(dir)):	$(d)/Rules.mk
 
