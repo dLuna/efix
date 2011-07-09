@@ -51,6 +51,7 @@ parse_result(Line0) ->
 
 add_ts("<TIME>" ++ Rest) ->
   timestamp() ++ add_ts(Rest);
+add_ts("00000000-" ++ Rest) -> "20110707-" ++ add_ts(Rest);
 add_ts([C | Rest]) -> [C | add_ts(Rest)];
 add_ts([]) -> [].
 
