@@ -46,7 +46,7 @@ parse_result(Line0) ->
     ok
   catch
     Type:Reason ->
-      {fail, {Type, Reason}, erlang:get_stacktrace()}
+      {fail, {Type, Reason, pp(Line)}, erlang:get_stacktrace()}
   end.
 
 add_ts("<TIME>" ++ Rest) ->
@@ -58,3 +58,7 @@ timestamp() ->
   {{YYYY, MM, DD}, {Hour, Min, Sec}} = erlang:localtime(),
   lists:flatten(io_lib:format("~4..0w~2..0w~2..0w-~2..0w:~2..0w:~2..0w",
                               [YYYY, MM, DD, Hour, Min, Sec])).
+
+pp([]) -> [];
+pp([1 | Rest]) -> "SOH" ++ pp(Rest);
+pp([C | Rest]) -> [C | pp(Rest)].
