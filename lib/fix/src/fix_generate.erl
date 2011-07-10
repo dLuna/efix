@@ -30,12 +30,12 @@ accumulate_transport_record(Xml, []) ->
   accumulate_transport_record(Xml, [{"FixTransport", ["message"]}]);
 accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
   Components = components(Xml),
-  Header = 
+  Header =
     [camel_case_to_underscore(attr(name, E)) ||
       E <- expanded_fields(children_of_child(header, Xml), Components)],
   Trailer =
     [camel_case_to_underscore(attr(name, E)) ||
-      #xmlElement{name = field} = E <- children_of_child(trailer, Xml)],
+      E <- expanded_fields(children_of_child(trailer, Xml), Components)],
   [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
 
 accumulate_message_records(Xml, Acc) ->
