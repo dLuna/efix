@@ -18,9 +18,7 @@ format_hrl(F, Files) ->
   Xmls =
     [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
       File <- Files, filename:extension(File) =:= ".xml"],
-  
   Records = lists:foldl(F, [], Xmls),
-
   Data = 
     [
      "%% -*- erlang-indent-level: 2 -*-\n"
@@ -53,7 +51,6 @@ add_record(#xmlElement{name = message} = Msg, Acc) ->
   %% FIXME: Handle component
   Fields = [camel_case_to_underscore(attr(name, E)) ||
              #xmlElement{name = field} = E <- Msg#xmlElement.content],
-  %% FIXME: Is this doable without sorting?
   case lists:keysearch(Name, 1, Acc) of
     {value, {Name, Values}} ->
       NewValues = lists:umerge(lists:sort(Fields), Values),
@@ -65,14 +62,11 @@ add_record(#xmlText{}, Acc) -> Acc.
 
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
-  %% FIXME: This is ugly, but works in a directory independent way
-  %% most of the time.
   MI = module_info(),
   {value, {compile, Compile}} = lists:keysearch(compile, 1, MI),
   {value, {source, Source}} = lists:keysearch(source, 1, Compile),
   {ok, Bin} = file:read_file(filename:dirname(Source) ++ "/fix_generate.aux"),
   Parser = binary_to_list(Bin),
-
   Result = set_values(Parser, Xml),
   io:format("~s", [Result]).
 
@@ -123,8 +117,8 @@ generate_message_typed_dispatcher(Description, Enum, Xml) ->
            children_of_child(messages, Xml),
          attr(msgtype, E) =:= Enum] of
     [] ->
-      %% FIXME: particularly for FIXT where the actual message types
-      %% are in the fix50* files.
+      %% FIXME: In FIXT the actual message types are in another file,
+      %%        depending on the value of enum ApplVerID.
       ["message(", Atom, ", Data) ->\n",
        "  throw({unknown_message_type, ", Atom, "});\n"];
     [MsgType] ->
@@ -149,6 +143,7 @@ generate_trailer_parser(Xml) ->
    "  throw({unexpected_data, Data, Acc}).\n"].
 
 generate_verify_record(Xml) ->
+  %% FIXME: compoment
   Header =
     [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
       #xmlElement{name = field} = E <- children_of_child(header, Xml)],
@@ -245,7 +240,7 @@ field_type_data(Name, Xml) ->
   [V] = [Element || #xmlElement{} = Element <- children_of_child(fields, Xml),
                     attr(name, Element) =:= Name],
   V.
-      
+
 %% String functions
 
 camel_case_to_underscore([C | Rest]) ->
