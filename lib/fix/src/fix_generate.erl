@@ -158,8 +158,13 @@ generate_verify_record(Xml) ->
   [[["verify_record(#", Record, "{} = Data) ->\n"
      "  case Data of\n",
      [["    #", Record, "{", Field, " = undefined} ->\n"
-       "      throw({missing_mandatory_field, ", Record, ",",  Field,
-       "});\n"] ||
+       %% FIXME: It seems like mandatory fiels are missing all the
+       %% time.  Including at Wikipedia.
+
+       %% "      throw({missing_mandatory_field, ", Record, ",",  Field,
+       %% "});\n"] ||
+       "      error_logger:format(\"{missing_mandatory_field, ",
+       Record, ",",  Field, "\", []), Data;\n"] ||
        {Field, Mandatory} <- Fields,
        Mandatory =:= "Y"],
      "    #", Record, "{} -> Data\n"
