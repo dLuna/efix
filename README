@@ -1,5 +1,8 @@
 For #spawnfest:
 
+  I'm sorry about the size of this project.  I was expecting something
+  a lot smaller.  600 lines of code.  100,000 lines of generated code.
+
   There is a diary of my progress in DIARY.txt
 
   "make test" returns "TESTFILE: PERCENT SUCCESS".  As you can see
@@ -8,9 +11,6 @@ For #spawnfest:
   exits via throw with a reasonable exit value I consider the test
   successful.  Note that FIXT is in many ways broken.  Full test
   results can be viewed in full_test_results.txt
-
-  TODO.txt contains a list of all the features of FIX which are not
-  supported yet.
 
   Files written by me are fix.erl, fix_generate.erl, fix_generate.aux,
   fix_read_data.erl, and fix_test.erl.  The rest are automatically
