@@ -32,9 +32,7 @@ format_hrl(F, Files) ->
 accumulate_transport_record(Xml, []) ->
   accumulate_transport_record(Xml, [{"FixTransport", ["message"]}]);
 accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
-  Components = try children_of_child(components, Xml)
-               catch _:_ -> [] %% No components in early FIX
-               end,
+  Components = components(Xml),
   Header =
     [camel_case_to_underscore(attr(name, E)) ||
       E <- expanded_fields(children_of_child(header, Xml), Components)],
@@ -44,9 +42,7 @@ accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
   [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
 
 accumulate_message_records(Xml, Acc) ->
-  Components = try children_of_child(components, Xml)
-               catch _:_ -> [] %% No components in early FIX
-               end,
+  Components = components(Xml),
   lists:foldl(
     fun(Msg, A) -> add_record(Msg, A, Components) end,
     Acc,
@@ -54,7 +50,6 @@ accumulate_message_records(Xml, Acc) ->
 
 add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
   Name = attr(name, Msg),
-  %% FIXME: Handle component
   Fields = [camel_case_to_underscore(attr(name, E)) ||
              E <- expanded_fields(Msg#xmlElement.content, Components)],
   case lists:keysearch(Name, 1, Acc) of
@@ -152,27 +147,26 @@ generate_message_type_handler(Msg, Xml) ->
    "  {Rest, verify_record(Acc)}.\n\n"].
 
 generate_trailer_parser(Xml) ->
-  [[single_field_parser("trailer", Element, Xml) ||
-     %% FIXME: Handle components
-     #xmlElement{name = field} = Element <- children_of_child(trailer, Xml)],
+  [[single_field_parser("trailer", E, Xml) ||
+     E <- expanded_fields(children_of_child(trailer, Xml), components(Xml))],
    "trailer(\"\", Acc) ->\n"
    "  verify_record(Acc);\n"
    "trailer(Data, Acc) ->\n"
    "  throw({unexpected_data, Data, Acc}).\n"].
 
 generate_verify_record(Xml) ->
-  %% FIXME: compoment
+  Components = components(Xml),
   Header =
     [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      #xmlElement{name = field} = E <- children_of_child(header, Xml)],
+      E <- expanded_fields(children_of_child(header, Xml), Components)],
   Trailer =
     [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      #xmlElement{name = field} = E <- children_of_child(trailer, Xml)],
+      E <- expanded_fields(children_of_child(trailer, Xml), Components)],
   Messages =
-    [{camel_case_to_underscore(attr(name, E)),
-      [{camel_case_to_underscore(attr(name, Field)), attr(required, Field)} ||
-        #xmlElement{name = field} = Field <- E#xmlElement.content]} ||
-      #xmlElement{name = message} = E <- children_of_child(messages, Xml)],
+    [{camel_case_to_underscore(attr(name, Msg)),
+      [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
+        E <- expanded_fields(Msg#xmlElement.content, Components)]} ||
+      #xmlElement{name = message} = Msg <- children_of_child(messages, Xml)],
   [[["verify_record(#", Record, "{} = Data) ->\n"
      "  case Data of\n",
      [["    #", Record, "{", Field, " = undefined} ->\n"
@@ -182,7 +176,8 @@ generate_verify_record(Xml) ->
        %% "      throw({missing_mandatory_field, ", Record, ",",  Field,
        %% "});\n"] ||
        "      error_logger:format(\"{missing_mandatory_field, ",
-       Record, ",",  Field, "\", []), Data;\n"] ||
+       Record, ",",  Field, "}\", []),\n"
+       "      Data;\n"] ||
        {Field, Mandatory} <- Fields,
        Mandatory =:= "Y"],
      "    #", Record, "{} -> Data\n"
@@ -257,6 +252,11 @@ attr(Key, #xmlElement{attributes = Attrs}) ->
 children_of_child(Key, #xmlElement{content = Content}) ->
   {value, Result} = lists:keysearch(Key, #xmlElement.name, Content),
   Result#xmlElement.content.
+
+components(Xml) ->
+  try children_of_child(components, Xml)
+  catch _:_ -> [] %% No components in early FIX
+  end.
 
 field_type_data(Name, Xml) ->
   [V] = [Element || #xmlElement{} = Element <- children_of_child(fields, Xml),
