@@ -297,3 +297,14 @@ I could start with making separate records/parsing for components and
 see how much that helps.  If it doesn't then the next step is to go
 back to key-value lists for non required fields, and only have record
 fields for required fields.
+
+23:30
+
+Working hard to make repeating groups work properly (intead of
+brokenly as it is now).  Not going to make it I think.
+
+23:38
+
+Found a bug!
+
+Testing takes a very long time, so we'll see if I dare commit the fix.
