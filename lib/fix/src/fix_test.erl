@@ -90,8 +90,16 @@ set_checksum(Line) ->
       CS = integer_to_list(lists:sum(Enil) rem 256),
       CSString = add_zeroes(CS),
       lists:reverse(Enil) ++ "10=" ++ CSString ++ [1];
-    _ ->
-      Line
+    [1, _, _, _, $=, $0, $1 | _] ->
+      Line; % A proper checksum already exists
+    [1, _, _, $=, $0, $1 | _] ->
+      Line; % A badly formatted checksum already exists
+    [1, _, $=, $0, $1 | _] ->
+      Line ;% A badly formatted checksum already exists
+    _ -> 
+      CS = integer_to_list(lists:sum(Line) rem 256),
+      CSString = add_zeroes(CS),
+      Line ++ "10=" ++ CSString ++ [1]
   end.
 
 add_zeroes([C]) -> [$0, $0, C];
