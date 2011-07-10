@@ -1,8 +1,6 @@
-TODO in order of priority:
+TODO in some order.  Will happen sooner = more towards the top.
 
 * Repeating groups
-
-* Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).
 
 * Better handling of components.  24k lines of records is just crazy!
 
@@ -46,3 +44,8 @@ full FIX protocol.
 
 * Handling of ApplVerId.  I.e. message version wrapped in the fix
   transport layer.
+
+* Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).  Not doable
+  without persistent storage.  At least session storage since it is
+  set during the logon messag.
+
