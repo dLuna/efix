@@ -7,8 +7,10 @@ d		:= $(dir)
 SRCS_$(d)       := $(wildcard $(d)/*.erl)
 XML_$(d)	:= $(wildcard $(d)/../priv/*.xml)
 GEN_$(d)        := $(XML_$(d):$(d)/../priv/%.xml=$(d)/%.erl)
-TGTS_$(d)	:= $(SRCS_$(d):$(d)/%.erl=$(d)/../ebin/%.beam) \
-			$(GEN_$(d):$(d)/%.erl=$(d)/../ebin/%.beam)
+GEN_TGTS_$(d)	:= $(GEN_$(d):$(d)/%.erl=$(d)/../ebin/%.beam) \
+			$(d)/../include/fix_messages.hrl \
+			$(d)/../include/fix_transport.hrl
+TGTS_$(d)	:= $(SRCS_$(d):$(d)/%.erl=$(d)/../ebin/%.beam)
 DEPS_$(d)	:= $(TGTS_$(d):%.beam=%.d)
 
 $(d)/../ebin/%.beam: $(d)/%.erl
@@ -24,21 +26,20 @@ $(d)/../ebin/%.d: $(d)/%.erl
 
 .SECONDEXPANSION:
 $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
-	  $(d)/../ebin/fix_generate.beam $(d)/fix_generate.aux
+	  $(d)/../ebin/fix_generate.beam $(d)/fix_generate.aux \
+	  $(d)/../include/fix_transport.hrl $(d)/../include/fix_messages.hrl
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate parser $(<) \
 	  -s erlang halt > $(@)
 
-$(d)/../include/fix_transport.hrl: $(d)/../priv/fixt11.xml $(d)/../ebin/fix_generate.beam
-	@set -e; rm -f $@; \
+$(d)/../include/fix_transport.hrl: $(d)/../priv/fixt11.xml \
+	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
 	  transport_hrl $(<) -s erlang halt > $(@)
 
-$(d)/../include/fix_messages.hrl: $(d)/../priv/fix50sp2.xml $(d)/../ebin/fix_generate.beam
-	@set -e; rm -f $@; \
+$(d)/../include/fix_messages.hrl: $(d)/../priv/fix50sp2.xml \
+	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
 	  messages_hrl $(<) -s erlang halt > $(@)
-
-GEN_HRL_$(d)	:= $(d)/../include/fix_messages.hrl $(d)/../include/fix_transport.hrl
 
 TGT_TEST_$(d)	:= $(d)/fix_test
 
@@ -49,10 +50,11 @@ $(d)/fix_test:
 
 TGT_TEST	:= $(TGT_TEST) $(TGT_TEST_$(d))
 
-TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d)) $(GEN_HRL_$(d))
-CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d)) $(GEN_HRL_$(d))
+TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d)) $(GEN_TGTS_$(d))
+CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d)) $(GEN_TGTS_$(d))
 
-$(TGTS_$(d)):	$(d)/Rules.mk
+$(TGTS_$(d)): $(d)/Rules.mk
+$(GEN_TGTS_$(d)): $(d)/Rules.mk
 
 # POP
 -include	$(DEPS_$(d))
