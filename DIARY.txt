@@ -308,3 +308,7 @@ brokenly as it is now).  Not going to make it I think.
 Found a bug!
 
 Testing takes a very long time, so we'll see if I dare commit the fix.
+
+23:54
+
+I'll go the chicken way.
