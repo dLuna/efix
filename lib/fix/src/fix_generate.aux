@@ -14,7 +14,7 @@ decode(FIX0) ->
   {FIX2, Message} = message(Header#fix_transport.msg_type, FIX1),
   Transport = trailer(FIX2, Header),
   check_checksum(FIX0, Transport#fix_transport.check_sum),
-  {Transport, Message}.
+  Transport#fix_transport{message = Message}.
 
 check_checksum(All, CheckSum) ->
   List = lists:sublist(All, length(All) - 7),
