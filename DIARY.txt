@@ -236,3 +236,7 @@ length manually as well.
 
 I'm doing anything I can to not implement component handling, so I
 guess it's time to do that now.
+
+17:31
+
+Stupid repeating groups.  And components.

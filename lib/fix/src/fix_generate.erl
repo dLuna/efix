@@ -32,25 +32,31 @@ format_hrl(F, Files) ->
 accumulate_transport_record(Xml, []) ->
   accumulate_transport_record(Xml, [{"FixTransport", ["message"]}]);
 accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
+  Components = try children_of_child(components, Xml)
+               catch _:_ -> [] %% No components in early FIX
+               end,
   Header =
     [camel_case_to_underscore(attr(name, E)) ||
-      #xmlElement{name = field} = E <- children_of_child(header, Xml)],
+      E <- expanded_fields(children_of_child(header, Xml), Components)],
   Trailer =
     [camel_case_to_underscore(attr(name, E)) ||
       #xmlElement{name = field} = E <- children_of_child(trailer, Xml)],
   [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
 
 accumulate_message_records(Xml, Acc) ->
+  Components = try children_of_child(components, Xml)
+               catch _:_ -> [] %% No components in early FIX
+               end,
   lists:foldl(
-    fun add_record/2,
+    fun(Msg, A) -> add_record(Msg, A, Components) end,
     Acc,
     children_of_child(messages, Xml)).
 
-add_record(#xmlElement{name = message} = Msg, Acc) ->
+add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
   Name = attr(name, Msg),
   %% FIXME: Handle component
   Fields = [camel_case_to_underscore(attr(name, E)) ||
-             #xmlElement{name = field} = E <- Msg#xmlElement.content],
+             E <- expanded_fields(Msg#xmlElement.content, Components)],
   case lists:keysearch(Name, 1, Acc) of
     {value, {Name, Values}} ->
       NewValues = lists:umerge(lists:sort(Fields), Values),
@@ -58,7 +64,19 @@ add_record(#xmlElement{name = message} = Msg, Acc) ->
     false ->
       [{Name, lists:sort(Fields)} | Acc]
   end;
-add_record(#xmlText{}, Acc) -> Acc.
+add_record(#xmlText{}, Acc, _Components) -> Acc.
+
+expanded_fields(List, Components) ->
+  lists:flatten(
+    [case FC of
+       #xmlElement{name = group} -> []; %% FIXME repeating group
+       #xmlElement{name = field} -> FC;
+       #xmlElement{name = component} ->
+         Name = attr(name, FC),
+         [Component] = [C || #xmlElement{} = C <- Components,
+                             attr(name, C) =:= Name],
+         expanded_fields(Component#xmlElement.content, Components)
+     end || #xmlElement{} = FC <- List]).
 
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),

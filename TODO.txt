@@ -1,12 +1,16 @@
-In no particular order or priority:
+TODO in order of priority:
 
-* Component handling in FIX5.0
+* Components
 
-* Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).  May or may
-  not be a won't fix.  Depending on time.
+* Repeating groups
+
+* Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).
 
 
 Things I will not complete during the competition:
+
+* Generate the .app file automatically.  Thus adding the fix*.erl
+  files to it based on the available xml-files.
 
 * Handling of encrypted messages
 
@@ -27,10 +31,6 @@ Things I will not complete during the competition:
   have any test data.
 
 * Checking of BodyLength
-
-* I suspect that my code will hande repeating sequences badly.
-  Test/fix.  I don't have any test data, so would have to write some
-  first.  Probably won't have time for that during the competition.
 
 * Give error when field is present more than once.
 
