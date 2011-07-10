@@ -130,10 +130,10 @@ generate_message_typed_dispatcher(Description, Enum, Xml) ->
            children_of_child(messages, Xml),
          attr(msgtype, E) =:= Enum] of
     [] ->
-      %% FIXME: In FIXT the actual message types are in another file,
-      %%        depending on the value of enum ApplVerID.
-      ["message(", Atom, ", Data) ->\n",
-       "  throw({unknown_message_type, ", Atom, "});\n"];
+      %% FIXME: With FIXT there is a transport layer and a message
+      %%        layer which are independent.  This clause matches when
+      %%        a type resides in the other layer.
+      [];
     [MsgType] ->
       ["message(", Atom, ", Data) ->\n"
        "  ", MsgType, "(Data, #", MsgType, "{});\n"]
