@@ -57,19 +57,6 @@ add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
   end;
 add_record(#xmlText{}, Acc, _Components) -> Acc.
 
-expanded_fields(List, Components) ->
-  lists:flatten(
-    [case FC of
-       #xmlElement{name = group} ->
-         expanded_fields(FC#xmlElement.content, Components);
-       #xmlElement{name = field} -> FC;
-       #xmlElement{name = component} ->
-         Name = attr(name, FC),
-         [Component] = [C || #xmlElement{} = C <- Components,
-                             attr(name, C) =:= Name],
-         expanded_fields(Component#xmlElement.content, Components)
-     end || #xmlElement{} = FC <- List]).
-
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
   MI = module_info(),
@@ -100,7 +87,7 @@ generate_header_parser(Xml) ->
   [[single_field_parser("header", Element, Xml) ||
      #xmlElement{name = field} = Element <- children_of_child(header, Xml)],
    "header(Rest, Acc) ->\n"
-   "  {Rest, Acc}.\n"].
+   "  {Rest, Acc}.\n\n"].
 
 generate_message_parser(Xml) ->
   Enums = field_type_data("MsgType", Xml),
@@ -253,6 +240,19 @@ components(Xml) ->
   try children_of_child(components, Xml)
   catch _:_ -> [] %% No components in early FIX
   end.
+
+expanded_fields(List, Components) ->
+  lists:flatten(
+    [case FC of
+       #xmlElement{name = group} ->
+         expanded_fields(FC#xmlElement.content, Components);
+       #xmlElement{name = field} -> FC;
+       #xmlElement{name = component} ->
+         Name = attr(name, FC),
+         [Component] = [C || #xmlElement{} = C <- Components,
+                             attr(name, C) =:= Name],
+         expanded_fields(Component#xmlElement.content, Components)
+     end || #xmlElement{} = FC <- List]).
 
 field_type_data(Name, Xml) ->
   [V] = [Element || #xmlElement{} = Element <- children_of_child(fields, Xml),
