@@ -1,5 +1,7 @@
 In no particular order or priority:
 
+* Component handling in FIX5.0
+
 * The parser returns a list of Key, Value pairs, this should be
   changed to make use of records.
 
