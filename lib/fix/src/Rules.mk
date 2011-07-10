@@ -32,14 +32,15 @@ $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
 	  -s erlang halt > $(@)
 
 $(d)/../include/fix_transport.hrl: $(d)/../priv/fixt11.xml \
+	  $(d)/../priv/fix42.xml  \
 	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
-	  transport_hrl $(<) -s erlang halt > $(@)
+	  transport_hrl $(^) -s erlang halt > $(@)
 
-$(d)/../include/fix_messages.hrl: $(d)/../priv/fix50sp2.xml \
+$(d)/../include/fix_messages.hrl: $(XML_$(d)) \
 	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
-	  messages_hrl $(<) -s erlang halt > $(@)
+	  messages_hrl $(^) -s erlang halt > $(@)
 
 TGT_TEST_$(d)	:= $(d)/fix_test
 

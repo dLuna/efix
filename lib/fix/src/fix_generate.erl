@@ -8,7 +8,7 @@
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-transport_hrl(XmlFile) ->
+transport_hrl([XmlFile | _]) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
   
   Data = 
@@ -20,27 +20,57 @@ transport_hrl(XmlFile) ->
   io:format("~s", [Data]).
 
 create_transport_record(Xml) ->
-  ["-record(transport, {\n",
+  ["-record(fix_transport, {\n",
    [create_record_field(Element, Xml) ||
      #xmlElement{name = field} = Element <- children_of_child(header, Xml)],
-   "  cannot_be_bothered_to_change_my_map_to_a_fold})."].
+   [create_record_field(Element, Xml) ||
+     #xmlElement{name = field} = Element <- children_of_child(trailer, Xml)],
+   "  cannot_be_bothered_to_change_my_map_to_a_fold}).\n"].
 
-messages_hrl(XmlFile) ->
-  {Xml, ""} = xmerl_scan:file(XmlFile),
+messages_hrl(Files) ->
+  Xmls =
+    [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
+      File <- Files, filename:extension(File) =:= ".xml"],
   
+  Records = lists:foldl(fun accumulate_records/2, [], Xmls),
+
   Data = 
     [
      "%% -*- erlang-indent-level: 2 -*-\n"
      "%% @author Daniel Luna <daniel@lunas.se>\n"
      "%% @copyright 2011 Daniel Luna\n\n",
-     create_message_records(Xml)],
+     [print_record(RecDef) || RecDef <- Records]],
   io:format("~s", [Data]).
 
-create_record_field(Element, Xml) ->
-  ["  ", camel_case_to_underscore(attr(name, Element)), ",\n"].
+accumulate_records(Xml, Acc) ->
+  lists:foldl(
+    fun add_record/2,
+    Acc,
+    children_of_child(messages, Xml)).
 
-create_message_records(Xml) ->
-  [].
+add_record(#xmlElement{name = message} = Msg, Acc) ->
+  Name = attr(name, Msg),
+  %% FIXME: Handle component
+  Fields = [camel_case_to_underscore(attr(name, E)) ||
+             #xmlElement{name = field} = E <- Msg#xmlElement.content],
+  %% FIXME: Is this doable without sorting?
+  case lists:keysearch(Name, 1, Acc) of
+    {value, {Name, Values}} ->
+      NewValues = lists:umerge(lists:sort(Fields), Values),
+      lists:keyreplace(Name, 1, Acc, {Name, NewValues});
+    false ->
+      [{Name, lists:sort(Fields)} | Acc]
+  end;
+add_record(#xmlText{}, Acc) -> Acc.
+
+print_record({Name, Fields}) ->
+  RecName = camel_case_to_underscore(Name),
+  ["-record(", RecName, ", {\n",
+   "  ", string:join(Fields, ",\n  "),
+   "}).\n\n"].
+
+create_record_field(Element, _Xml) ->
+  ["  ", camel_case_to_underscore(attr(name, Element)), ",\n"].
 
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
@@ -118,6 +148,7 @@ generate_message_type_handler(Msg, Xml) ->
 
 generate_trailer_parser(Xml) ->
   [[single_field_parser("trailer", Element, Xml) ||
+     %% FIXME: Handle components
      #xmlElement{name = field} = Element <- children_of_child(trailer, Xml)],
    "trailer(\"\", Acc) ->\n"
    "  Acc.\n"].
@@ -139,8 +170,12 @@ single_field_parser(MsgName, Field, Xml) ->
    "  {FieldData0, Rest} = fix_read_data:", FixVersion, "(",
    Type, ", String),\n",
    MaybeEnumToValue,
-   "  ", MsgName, "(Rest, [{", FieldKey, ", FieldData} | Acc]);\n"].
-%%   "  ", MsgName, "(Rest, Acc#", MsgName, "{", FieldKey, " = FieldData});\n"].
+   "  ", MsgName, "(Rest, Acc#", rec_name(MsgName), "{", FieldKey,
+   " = FieldData});\n"].
+
+rec_name("header") -> "fix_transport";
+rec_name("trailer") -> "fix_transport";
+rec_name(Other) -> Other.
 
 generate_enum_to_value(Xml) ->
   [[generate_enum_to_value_field(Field) ||
