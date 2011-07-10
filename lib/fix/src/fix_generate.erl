@@ -86,6 +86,8 @@ set_values("%%TRAILERPARSER%%" ++ Rest, Xml) ->
   [generate_trailer_parser(Xml), set_values(Rest, Xml)];
 set_values("%%ENUM_TO_VALUE%%" ++ Rest, Xml) ->
   [generate_enum_to_value(Xml), set_values(Rest, Xml)];
+set_values("%%VERIFY_RECORD%%" ++ Rest, Xml) ->
+  [generate_verify_record(Xml), set_values(Rest, Xml)];
 set_values([C | Rest], Xml) ->
   [C | set_values(Rest, Xml)];
 set_values([], _) -> [].
@@ -135,14 +137,41 @@ generate_message_type_handler(Msg, Xml) ->
   [[single_field_parser(MsgName, Field, Xml) 
     || #xmlElement{name = field} = Field <- Msg#xmlElement.content],
    MsgName, "(Rest, Acc) ->\n"
-   "  {Rest, Acc}.\n\n"].
+   "  {Rest, verify_record(Acc)}.\n\n"].
 
 generate_trailer_parser(Xml) ->
   [[single_field_parser("trailer", Element, Xml) ||
      %% FIXME: Handle components
      #xmlElement{name = field} = Element <- children_of_child(trailer, Xml)],
    "trailer(\"\", Acc) ->\n"
-   "  Acc.\n"].
+   "  verify_record(Acc);\n"
+   "trailer(Data, Acc) ->\n"
+   "  throw({unexpected_data, Data, Acc}).\n"].
+
+generate_verify_record(Xml) ->
+  Header =
+    [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
+      #xmlElement{name = field} = E <- children_of_child(header, Xml)],
+  Trailer =
+    [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
+      #xmlElement{name = field} = E <- children_of_child(trailer, Xml)],
+  Messages =
+    [{camel_case_to_underscore(attr(name, E)),
+      [{camel_case_to_underscore(attr(name, Field)), attr(required, Field)} ||
+        #xmlElement{name = field} = Field <- E#xmlElement.content]} ||
+      #xmlElement{name = message} = E <- children_of_child(messages, Xml)],
+  [[["verify_record(#", Record, "{} = Data) ->\n"
+     "  case Data of\n",
+     [["    #", Record, "{", Field, " = undefined} ->\n"
+       "      throw({missing_mandatory_field, ", Record, ",",  Field,
+       "});\n"] ||
+       {Field, Mandatory} <- Fields,
+       Mandatory =:= "Y"],
+     "    #", Record, "{} -> Data\n"
+     "  end;\n"]  ||
+     {Record, Fields} <- [{"fix_transport", Header ++ Trailer} | Messages]],
+   "verify_record(Data) ->\n"
+   "  throw({unknown_record, Data})."].
 
 single_field_parser(MsgName, Field, Xml) ->
   FieldName = attr(name, Field),
