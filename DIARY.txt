@@ -262,3 +262,22 @@ Files generated:
 
 With repeating groups handled (albeit in a crappy way) the record
 definition file is up to 24k lines.  Ouch.
+
+20:40
+
+Lost my motivation.  It works reasonably well.  Feels like the next
+step is to pair this thing with a trading platform and find out all
+the things that don't work.
+
+21:00
+
+Thinking of ways to make the generated code smaller.  It's silly to
+have 24k lines of record definitions.
+
+Maybe the original key, value version wasn't som bad after all.
+
+21:20
+
+Laptop randomly decided to hibernate.  Probably because of power cable
+glitch. :-(
+
