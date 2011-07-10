@@ -13,14 +13,14 @@ code, and the XML files are a known constant size.
 
 2011-07-09 00:00
 
-Creating directory structury.
+Creating directory structure.
 
-Copy of basic build structur from another project.
+Copy of basic build files from another project.
 
 Adding lots of .gitignore files.
 
 Copying xml files from quickfix code. Running 'for a in FIX*; do mv $a
-$(echo $a | tr A-Z a-z); done' to make the files lowercas.
+$(echo $a | tr A-Z a-z); done' to make the files lowercase.
 
 I know that I should probably add a COPYRIGHT file related to these
 files, but that will have to be handled later. (QuickFIX has a very
@@ -121,7 +121,7 @@ this in XSLT.  It's bad enough in Erlang.  :-)
 
 Yay!  Code builds again.
 
-Next step is to do some cleanup befor continuing.
+Next step is to do some cleanup before continuing.
 
 18:58
 
@@ -276,8 +276,13 @@ have 24k lines of record definitions.
 
 Maybe the original key, value version wasn't som bad after all.
 
+Cheese burger!
+
 21:20
 
 Laptop randomly decided to hibernate.  Probably because of power cable
 glitch. :-(
 
+22:00
+
+Two hours to go.
