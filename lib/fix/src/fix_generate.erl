@@ -193,7 +193,7 @@ generate_enum_to_value_field(Field, FixVersion) ->
           "MULTIPLESTRINGVALUE" -> {$", $"};
           "MULTIPLEVALUESTRING" -> {$", $"};
           "MULTIPLECHARVALUE" -> {$", $"};
-          "BOOLEAN" -> {$", $"};
+          "BOOLEAN" -> {$$, []};
           "NUMINGROUP" -> {[], []};
           "INT" -> {[], []}
         end,

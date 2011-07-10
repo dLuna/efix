@@ -62,8 +62,8 @@ fixt11(tagnum, Data) -> int(Data); %% tagnum(Data);
 fixt11(utctimestamp, Data) -> time(Data);
 fixt11(Type, Data) -> throw({not_yet_implemented_type, fixt11, Type, Data}).
 
-boolean([$Y, ?SOH | Rest]) -> {true, Rest};
-boolean([$N, ?SOH | Rest]) -> {false, Rest}.
+boolean([$Y, ?SOH | Rest]) -> {$Y, Rest};
+boolean([$N, ?SOH | Rest]) -> {$N, Rest}.
 
 char([C, ?SOH | Rest]) -> {C, Rest}.
 

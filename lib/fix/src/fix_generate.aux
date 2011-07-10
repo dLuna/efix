@@ -25,7 +25,9 @@ check_checksum(All, CheckSum) ->
          _ when is_list(CheckSum) ->
            list_to_integer(CheckSum);
          _ when is_integer(CheckSum) ->
-           CheckSum
+           CheckSum;
+         undefined ->
+           throw(missing_checksum)
        end,
   case CS =:= Sum of
     true -> ok;
