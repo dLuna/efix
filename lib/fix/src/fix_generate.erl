@@ -91,13 +91,13 @@ set_values([C | Rest], Xml) ->
 set_values([], _) -> [].
 
 generate_fix_version(Xml) ->
-  [string:to_lower(attr(type, Xml)),
-   attr(major, Xml),
-   attr(minor, Xml),
-   case attr(servicepack, Xml) of
-     "0" -> [];
-     SP -> ["sp", SP]
-   end].
+  lists:flatten([string:to_lower(attr(type, Xml)),
+                 attr(major, Xml),
+                 attr(minor, Xml),
+                 case attr(servicepack, Xml) of
+                   "0" -> [];
+                   SP -> ["sp", SP]
+                 end]).
 
 generate_header_parser(Xml) ->
   [[single_field_parser("header", Element, Xml) ||
@@ -115,6 +115,7 @@ generate_message_parser(Xml) ->
      #xmlElement{name = message} = E <- children_of_child(messages, Xml)]].
 
 generate_message_typed_dispatcher(Description, Enum, Xml) ->
+  Atom = quote_atom(string:to_lower(Description)),
   case [camel_case_to_underscore(attr(name, E)) ||
          #xmlElement{name = message} = E <-
            children_of_child(messages, Xml),
@@ -122,12 +123,11 @@ generate_message_typed_dispatcher(Description, Enum, Xml) ->
     [] ->
       %% FIXME: particularly for FIXT where the actual message types
       %% are in the fix50* files.
-      Atom = quote_atom(string:to_lower(Description)),
       ["message(", Atom, ", Data) ->\n",
        "  throw({unknown_message_type, ", Atom, "});\n"];
     [MsgType] ->
-      ["message(", quote_atom(string:to_lower(Description)), ", Data) ->\n"
-       "  ", MsgType, "(Data, []);\n"]
+      ["message(", Atom, ", Data) ->\n"
+       "  ", MsgType, "(Data, #", MsgType, "{});\n"]
   end.
 
 generate_message_type_handler(Msg, Xml) ->
@@ -169,29 +169,35 @@ rec_name("trailer") -> "fix_transport";
 rec_name(Other) -> Other.
 
 generate_enum_to_value(Xml) ->
-  [[generate_enum_to_value_field(Field) ||
+  [[generate_enum_to_value_field(Field, generate_fix_version(Xml)) ||
      #xmlElement{name = field} = Field <- children_of_child(fields, Xml)],
    "enum_to_value(Type, Value) ->\n"
    "  throw({unknown_enum_value, Type, Value}).\n"].
 
-generate_enum_to_value_field(Field) ->
+generate_enum_to_value_field(Field, FixVersion) ->
   N = attr(number, Field),
   case [E || #xmlElement{name = value} = E <- Field#xmlElement.content] of
     [] -> [];
     Enums ->
-      Quote = case attr(type, Field) of
-                "CHAR" -> $";
-                "STRING" -> $";
-                %% FIXME: Some of these need completely different
-                %% handling
-                "MULTIPLESTRINGVALUE" -> $";
-                "MULTIPLEVALUESTRING" -> $";
-                "MULTIPLECHARVALUE" -> $";
-                "BOOLEAN" -> $";
-                "NUMINGROUP" -> [];
-                "INT" -> []
-              end,
-      [["enum_to_value(\"", N, "\", ", Quote, attr(enum, E), Quote, ") ->\n"
+      {Prefix, Postfix} =
+        case attr(type, Field) of
+          "CHAR" ->
+            case FixVersion of
+              "fix40" -> {$", $"};
+              "fix41" -> {$", $"};
+              _ -> {$$, []}
+            end;
+          "STRING" -> {$", $"};
+          %% FIXME: Some of these need completely different
+          %% handling
+          "MULTIPLESTRINGVALUE" -> {$", $"};
+          "MULTIPLEVALUESTRING" -> {$", $"};
+          "MULTIPLECHARVALUE" -> {$", $"};
+          "BOOLEAN" -> {$", $"};
+          "NUMINGROUP" -> {[], []};
+          "INT" -> {[], []}
+        end,
+      [["enum_to_value(\"", N, "\", ", Prefix, attr(enum, E), Postfix, ") ->\n"
         "  ", quote_atom(string:to_lower(attr(description, E))), ";\n"] ||
         E <- Enums]
   end.
