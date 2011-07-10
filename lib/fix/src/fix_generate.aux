@@ -6,6 +6,8 @@
 -module(%%VERSIONATOM%%).
 -author('Daniel Luna <daniel@lunas.se>').
 -export([decode/1]).
+-include("../include/fix_transport.hrl").
+-include("../include/fix_messages.hrl").
 
 decode(FIX0) ->
   {FIX1, Header} = header(FIX0, []),

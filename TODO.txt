@@ -3,11 +3,9 @@ In no particular order or priority:
 * The parser returns a list of Key, Value pairs, this should be
   changed to make use of records.
 
-* Checksum handling
+* Proper testing of checksum
 
 * Handling of encrypted messages
-
-* All FIX versions should at least be able to handle the basic types.
 
 * Handle all types, PARTIALLY FIXED. Handles all types that are in the
   test files from QuickFIX

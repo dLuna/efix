@@ -145,3 +145,13 @@ strings.  Need to look at the type when I generate the code.
 20:42
 
 Food.
+
+24:00
+
+Half time.
+
+I've done something stupid with my makefile.  It builds too much.  I
+guess it's better than the other way around.  Mark that as won't fix.
+
+Working on building a bunch of Erlang records so that I can return
+records instead of ugly Key, Value pairs.

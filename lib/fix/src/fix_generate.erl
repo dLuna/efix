@@ -4,11 +4,45 @@
 
 -module(fix_generate).
 -author('Daniel Luna <daniel@lunas.se>').
--export([generate/1]).
+-export([parser/1, transport_hrl/1, messages_hrl/1]).
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-generate(XmlFile) ->
+transport_hrl(XmlFile) ->
+  {Xml, ""} = xmerl_scan:file(XmlFile),
+  
+  Data = 
+    [
+     "%% -*- erlang-indent-level: 2 -*-\n"
+     "%% @author Daniel Luna <daniel@lunas.se>\n"
+     "%% @copyright 2011 Daniel Luna\n\n",
+     create_transport_record(Xml)],
+  io:format("~s", [Data]).
+
+create_transport_record(Xml) ->
+  ["-record(transport, {\n",
+   [create_record_field(Element, Xml) ||
+     #xmlElement{name = field} = Element <- children_of_child(header, Xml)],
+   "  cannot_be_bothered_to_change_my_map_to_a_fold})."].
+
+messages_hrl(XmlFile) ->
+  {Xml, ""} = xmerl_scan:file(XmlFile),
+  
+  Data = 
+    [
+     "%% -*- erlang-indent-level: 2 -*-\n"
+     "%% @author Daniel Luna <daniel@lunas.se>\n"
+     "%% @copyright 2011 Daniel Luna\n\n",
+     create_message_records(Xml)],
+  io:format("~s", [Data]).
+
+create_record_field(Element, Xml) ->
+  ["  ", camel_case_to_underscore(attr(name, Element)), ",\n"].
+
+create_message_records(Xml) ->
+  [].
+
+parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
   %% FIXME: This is ugly, but works in a directory independent way
   %% most of the time.
@@ -106,6 +140,7 @@ single_field_parser(MsgName, Field, Xml) ->
    Type, ", String),\n",
    MaybeEnumToValue,
    "  ", MsgName, "(Rest, [{", FieldKey, ", FieldData} | Acc]);\n"].
+%%   "  ", MsgName, "(Rest, Acc#", MsgName, "{", FieldKey, " = FieldData});\n"].
 
 generate_enum_to_value(Xml) ->
   [[generate_enum_to_value_field(Field) ||

@@ -25,8 +25,20 @@ $(d)/../ebin/%.d: $(d)/%.erl
 .SECONDEXPANSION:
 $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
 	  $(d)/../ebin/fix_generate.beam $(d)/fix_generate.aux
-	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate generate $(<) \
+	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate parser $(<) \
 	  -s erlang halt > $(@)
+
+$(d)/../include/fix_transport.hrl: $(d)/../priv/fixt11.xml $(d)/../ebin/fix_generate.beam
+	@set -e; rm -f $@; \
+	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
+	  transport_hrl $(<) -s erlang halt > $(@)
+
+$(d)/../include/fix_messages.hrl: $(d)/../priv/fix50sp2.xml $(d)/../ebin/fix_generate.beam
+	@set -e; rm -f $@; \
+	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
+	  messages_hrl $(<) -s erlang halt > $(@)
+
+GEN_HRL_$(d)	:= $(d)/../include/fix_messages.hrl $(d)/../include/fix_transport.hrl
 
 TGT_TEST_$(d)	:= $(d)/fix_test
 
@@ -37,8 +49,8 @@ $(d)/fix_test:
 
 TGT_TEST	:= $(TGT_TEST) $(TGT_TEST_$(d))
 
-TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d))
-CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d))
+TGT_BIN		:= $(TGT_BIN) $(TGTS_$(d)) $(GEN_HRL_$(d))
+CLEAN		:= $(CLEAN) $(TGTS_$(d)) $(DEPS_$(d)) $(GEN_$(d)) $(GEN_HRL_$(d))
 
 $(TGTS_$(d)):	$(d)/Rules.mk
 
