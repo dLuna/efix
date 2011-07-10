@@ -227,3 +227,12 @@ a decent error message to the client.
 
 Doing some cleanup and writing basic documentation for the #spawnfest
 judges.
+
+16:48
+
+Have fixed a bunch of bugs.  And made the tests better.  A lot more of
+them succed when I add a checksum manually.  Should probably add
+length manually as well.
+
+I'm doing anything I can to not implement component handling, so I
+guess it's time to do that now.

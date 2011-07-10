@@ -159,7 +159,7 @@ generate_verify_record(Xml) ->
      "  case Data of\n",
      [["    #", Record, "{", Field, " = undefined} ->\n"
        %% FIXME: It seems like mandatory fiels are missing all the
-       %% time.  Including at Wikipedia.
+       %%        time.  Including at Wikipedia.
 
        %% "      throw({missing_mandatory_field, ", Record, ",",  Field,
        %% "});\n"] ||
@@ -217,8 +217,7 @@ generate_enum_to_value_field(Field, FixVersion) ->
               _ -> {$$, []}
             end;
           "STRING" -> {$", $"};
-          %% FIXME: Some of these need completely different
-          %% handling
+          %% FIXME: Some of these need completely different handling
           "MULTIPLESTRINGVALUE" -> {$", $"};
           "MULTIPLEVALUESTRING" -> {$", $"};
           "MULTIPLECHARVALUE" -> {$", $"};

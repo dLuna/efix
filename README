@@ -20,11 +20,13 @@ FIX 4.4:
 
   According to the specification 139/MiscFeeType is of type CHAR but
   has enum valees that don't fit in a char.  This implementation has
-  changed the type to STRING.
+  changed the type to STRING.  (This is also consistent with later
+  versions of FIX.)
 
   MassCancelRejectReason is of type CHAR according to spec but has an
-  enumeration out of range (99).  Thus this implementation user
-  STRING.
+  enumeration value that is out of range (99).  Thus this
+  implementation uses STRING.  (This is also consistent with later
+  versions of FIX.)
 
 
 For #spawnfest:
