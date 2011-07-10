@@ -54,11 +54,11 @@ fix44(Type, Data) -> throw({not_yet_implemented_type, fix44, Type, Data}).
 
 fixt11(boolean, Data) -> boolean(Data);
 fixt11(int, Data) -> int(Data);
-fixt11(length, Data) -> int(Data); %% length_(Data);
-fixt11(numingroup, Data) -> int(Data); %% numingroup(Data);
-fixt11(seqnum, Data) -> int(Data); %% seqnum(Data);
+fixt11(length, Data) -> length(Data);
+fixt11(numingroup, Data) -> numingroup(Data);
+fixt11(seqnum, Data) -> seqnum(Data);
 fixt11(string, Data) -> string(Data);
-fixt11(tagnum, Data) -> int(Data); %% tagnum(Data);
+fixt11(tagnum, Data) -> tagnum(Data);
 fixt11(utctimestamp, Data) -> time(Data);
 fixt11(Type, Data) -> throw({not_yet_implemented_type, fixt11, Type, Data}).
 
@@ -77,6 +77,8 @@ int(Data) ->
 
 length(Data) -> posint(Data).
 
+numingroup(Data) -> posint(Data).
+
 posint(Data) ->
   {Value, Rest} = int(Data),
   %% FIXME: Including zero or not?
@@ -91,6 +93,8 @@ string(Data) -> string(Data, []).
 
 string([?SOH | Rest], Acc) -> {lists:reverse(Acc), Rest};
 string([C | Rest], Acc) -> string(Rest, [C | Acc]).
+
+tagnum(Data) when hd(Data) =/= $0 -> posint(Data).
 
 time(Data) ->
   {String, Rest} = string(Data),
