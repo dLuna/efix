@@ -30,6 +30,8 @@ fix41(Type, Data) -> throw({not_yet_implemented_type, fix41, Type, Data}).
 fix42(boolean, Data) -> boolean(Data);
 fix42(char, Data) -> char(Data);
 fix42(int, Data) -> int(Data);
+fix42(price, Data) -> price(Data);
+fix42(qty, Data) -> qty(Data);
 fix42(string, Data) -> string(Data);
 fix42(utctimestamp, Data) -> time(Data);
 fix42(Type, Data) -> throw({not_yet_implemented_type, fix42, Type, Data}).
@@ -69,7 +71,9 @@ char([C, ?SOH | Rest]) -> {C, Rest}.
 
 float(Data) ->
   {String, Rest} = string(Data),
-  {list_to_float(String), Rest}.
+  try {erlang:float(list_to_integer(String)), Rest}
+  catch _:_ -> {list_to_float(String), Rest}
+  end.
 
 int(Data) ->
   {String, Rest} = string(Data),
@@ -86,6 +90,10 @@ posint(Data) ->
     true -> {Value, Rest};
     false -> throw({field_not_positive, Value})
   end.
+
+price(Data) -> float(Data).
+
+qty(Data) -> float(Data).
   
 seqnum(Data) -> posint(Data).
 
