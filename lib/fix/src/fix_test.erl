@@ -42,7 +42,8 @@ parse_result(Line0) ->
     end,
   Line2 = add_ts(Line1),
   Line3 = clean(Line2),
-  Line = set_checksum(Line3),
+  Line4 = add_length(Line3),
+  Line = set_checksum(Line4),
   try
     fix:decode(Line),
     ok
@@ -83,6 +84,22 @@ pp([C | Rest]) -> [C | pp(Rest)].
 clean("1," ++ Rest) -> Rest;
 clean("2," ++ Rest) -> Rest;
 clean(Rest) -> Rest.
+
+add_length(Line) ->
+  {Hd, Tl} = lists:splitwith(fun(C) -> C =/= 1 end, Line),
+  case tl(Tl) of
+    "9=" ++ _ -> Line; %% Already has BodyLength tag
+    _ ->
+      {L, CS} = split_checksum(Tl, ""),
+      Hd ++ [1] ++ "9=" ++ integer_to_list(length(L) - 1) ++ L ++ CS
+  end.
+
+split_checksum("10=" ++ Rest, Acc) ->
+  {lists:reverse(Acc), "10=" ++ Rest};
+split_checksum([], Acc) ->
+  {lists:reverse(Acc), ""};
+split_checksum([C | Rest], Acc) ->
+  split_checksum(Rest, [C | Acc]).
 
 set_checksum(Line) ->
   case lists:reverse(Line) of
