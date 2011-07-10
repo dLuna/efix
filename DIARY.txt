@@ -247,3 +247,18 @@ Everything seems to work fine.
 
 Only major thing still to do is repeating groups.  I wonder if I can
 get faster compile times cause it's starting to be silly.
+
+Files written by me:
+
+> cat fix.erl fix_* | wc -l
+596
+
+Files generated:
+
+> cat fix[0-9]* fixt* ../include/fix_* | wc -l
+90222
+
+19:17
+
+With repeating groups handled (albeit in a crappy way) the record
+definition file is up to 24k lines.  Ouch.

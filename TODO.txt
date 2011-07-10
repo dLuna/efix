@@ -1,7 +1,5 @@
 TODO in order of priority:
 
-* Components
-
 * Repeating groups
 
 * Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).
@@ -27,8 +25,8 @@ Things I will not complete during the competition:
   This is currently the only part of the system that fails without
   throwing.
 
-* Handle MULTIPLEXXX types for enumerated types.  WON'T FIX.  Don't
-  have any test data.
+* Handling of Multiplestringvalue, Multiplevaluestring, and
+  Multiplecharvalue for enumerated types.
 
 * Checking of BodyLength
 
