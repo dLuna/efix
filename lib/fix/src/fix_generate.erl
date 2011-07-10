@@ -64,7 +64,8 @@ add_record(#xmlText{}, Acc, _Components) -> Acc.
 expanded_fields(List, Components) ->
   lists:flatten(
     [case FC of
-       #xmlElement{name = group} -> []; %% FIXME repeating group
+       #xmlElement{name = group} ->
+         expanded_fields(FC#xmlElement.content, Components);
        #xmlElement{name = field} -> FC;
        #xmlElement{name = component} ->
          Name = attr(name, FC),
@@ -151,6 +152,14 @@ generate_trailer_parser(Xml) ->
      E <- expanded_fields(children_of_child(trailer, Xml), components(Xml))],
    "trailer(\"\", Acc) ->\n"
    "  verify_record(Acc);\n"
+   "trailer([C1, $= | _], Acc) ->\n"
+   "  throw({unexpected_field, [C1], Acc});\n"
+   "trailer([C1, C2, $= | _], Acc) ->\n"
+   "  throw({unexpected_field, [C1, C2], Acc});\n"
+   "trailer([C1, C2, C3, $= | _], Acc) ->\n"
+   "  throw({unexpected_field, [C1, C2, C3], Acc});\n"
+   "trailer([C1, C2, C3, C4, $= | _], Acc) ->\n"
+   "  throw({unexpected_field, [C1, C2, C3, C4], Acc});\n"
    "trailer(Data, Acc) ->\n"
    "  throw({unexpected_data, Data, Acc}).\n"].
 
