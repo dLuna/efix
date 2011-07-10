@@ -196,3 +196,18 @@ There are probably speedups possible.  The code generation is really,
 really slow.  On the other hand, it's XML, and I don't really do any
 optimisations with regards to accessing items in the structure.
 
+07:34
+
+Starting to be tired (local time 03:34).  And I don't really have that
+much "easy code" left to write.  Maybe go on tomorrow instead.
+
+My laptop is on it's knees when it comes to generating and compiling.
+68000 lines of generated code.  And I don't really see a good way to
+make it shorter.  There are minor differences between versions so
+shared files are hard to make.
+
+07:44
+
+82461 lines with checking for mandatory fields.  Ouch!
+
+
