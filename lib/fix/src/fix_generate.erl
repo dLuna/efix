@@ -15,25 +15,22 @@ messages_hrl(Files) ->
   format_hrl(fun accumulate_message_records/2, Files).
 
 format_hrl(F, Files) ->
-  Xmls =
-    [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
-      File <- Files, filename:extension(File) =:= ".xml"],
+  Xmls = [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
+           File <- Files, filename:extension(File) =:= ".xml"],
   Records = lists:foldl(F, [], Xmls),
-  Data = 
-    [
-     "%% -*- erlang-indent-level: 2 -*-\n"
-     "%% @author Daniel Luna <daniel@lunas.se>\n"
-     "%% @copyright 2011 Daniel Luna\n\n",
-     [["-record(", camel_case_to_underscore(Name), ", {\n",
-       "          ", string:join(Fields, ",\n          "),
-       "}).\n\n"] || {Name, Fields} <- Records]],
+  Data = ["%% -*- erlang-indent-level: 2 -*-\n"
+          "%% @author Daniel Luna <daniel@lunas.se>\n"
+          "%% @copyright 2011 Daniel Luna\n\n",
+          [["-record(", camel_case_to_underscore(Name), ", {\n",
+            "          ", string:join(Fields, ",\n          "),
+            "}).\n\n"] || {Name, Fields} <- Records]],
   io:format("~s", [Data]).
 
 accumulate_transport_record(Xml, []) ->
   accumulate_transport_record(Xml, [{"FixTransport", ["message"]}]);
 accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
   Components = components(Xml),
-  Header =
+  Header = 
     [camel_case_to_underscore(attr(name, E)) ||
       E <- expanded_fields(children_of_child(header, Xml), Components)],
   Trailer =
@@ -43,10 +40,9 @@ accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
 
 accumulate_message_records(Xml, Acc) ->
   Components = components(Xml),
-  lists:foldl(
-    fun(Msg, A) -> add_record(Msg, A, Components) end,
-    Acc,
-    children_of_child(messages, Xml)).
+  lists:foldl(fun(Msg, A) -> add_record(Msg, A, Components) end,
+              Acc,
+              children_of_child(messages, Xml)).
 
 add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
   Name = attr(name, Msg),
@@ -80,25 +76,16 @@ parser(XmlFile) ->
   {value, {compile, Compile}} = lists:keysearch(compile, 1, MI),
   {value, {source, Source}} = lists:keysearch(source, 1, Compile),
   {ok, Bin} = file:read_file(filename:dirname(Source) ++ "/fix_generate.aux"),
-  Parser = binary_to_list(Bin),
-  Result = set_values(Parser, Xml),
-  io:format("~s", [Result]).
+  Data = [set_values(binary_to_list(Bin), Xml),
+          generate_header_parser(Xml),
+          generate_message_parser(Xml),
+          generate_trailer_parser(Xml),
+          generate_enum_to_value(Xml),
+          generate_verify_record(Xml)],
+  io:format("~s", [Data]).
 
-set_values("%%VERSIONATOM%%" ++ Rest, Xml) ->
-  [generate_fix_version(Xml), set_values(Rest, Xml)];
-set_values("%%HEADERPARSER%%" ++ Rest, Xml) ->
-  [generate_header_parser(Xml), set_values(Rest, Xml)];
-set_values("%%MESSAGEPARSER%%" ++ Rest, Xml) ->
-  [generate_message_parser(Xml), set_values(Rest, Xml)];
-set_values("%%TRAILERPARSER%%" ++ Rest, Xml) ->
-  [generate_trailer_parser(Xml), set_values(Rest, Xml)];
-set_values("%%ENUM_TO_VALUE%%" ++ Rest, Xml) ->
-  [generate_enum_to_value(Xml), set_values(Rest, Xml)];
-set_values("%%VERIFY_RECORD%%" ++ Rest, Xml) ->
-  [generate_verify_record(Xml), set_values(Rest, Xml)];
-set_values([C | Rest], Xml) ->
-  [C | set_values(Rest, Xml)];
-set_values([], _) -> [].
+set_values("%%VERSION%%" ++ Rest, Xml) -> [generate_fix_version(Xml), Rest];
+set_values([C | Rest], Xml) -> [C | set_values(Rest, Xml)].
 
 generate_fix_version(Xml) ->
   lists:flatten([string:to_lower(attr(type, Xml)),

@@ -3,7 +3,7 @@
 %% @author Daniel Luna <daniel@lunas.se>
 %% @copyright 2011 Daniel Luna
 
--module(%%VERSIONATOM%%).
+-module(%%VERSION%%).
 -author('Daniel Luna <daniel@lunas.se>').
 -export([decode/1]).
 -include("../include/fix_transport.hrl").
@@ -34,13 +34,3 @@ check_checksum(All, CheckSum) ->
     false ->
       throw({invalid_checksum, CS, Sum})
   end.
-
-%%HEADERPARSER%%
-
-%%MESSAGEPARSER%%
-
-%%TRAILERPARSER%%
-
-%%ENUM_TO_VALUE%%
-
-%%VERIFY_RECORD%%
