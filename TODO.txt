@@ -2,8 +2,6 @@ In no particular order or priority:
 
 * Component handling in FIX5.0
 
-* Check that mandatory items are there
-
 * I suspect that my code will hande repeating sequences badly.
   Test/fix.
 
