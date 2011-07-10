@@ -8,41 +8,40 @@
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-transport_hrl([XmlFile | _]) ->
-  {Xml, ""} = xmerl_scan:file(XmlFile),
-  
-  Data = 
-    [
-     "%% -*- erlang-indent-level: 2 -*-\n"
-     "%% @author Daniel Luna <daniel@lunas.se>\n"
-     "%% @copyright 2011 Daniel Luna\n\n",
-     create_transport_record(Xml)],
-  io:format("~s", [Data]).
-
-create_transport_record(Xml) ->
-  ["-record(fix_transport, {\n",
-   [create_record_field(Element, Xml) ||
-     #xmlElement{name = field} = Element <- children_of_child(header, Xml)],
-   [create_record_field(Element, Xml) ||
-     #xmlElement{name = field} = Element <- children_of_child(trailer, Xml)],
-   "  cannot_be_bothered_to_change_my_map_to_a_fold}).\n"].
+transport_hrl(Files) ->
+  format_hrl(fun accumulate_transport_record/2, Files).
 
 messages_hrl(Files) ->
+  format_hrl(fun accumulate_message_records/2, Files).
+
+format_hrl(F, Files) ->
   Xmls =
     [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
       File <- Files, filename:extension(File) =:= ".xml"],
   
-  Records = lists:foldl(fun accumulate_records/2, [], Xmls),
+  Records = lists:foldl(F, [], Xmls),
 
   Data = 
     [
      "%% -*- erlang-indent-level: 2 -*-\n"
      "%% @author Daniel Luna <daniel@lunas.se>\n"
      "%% @copyright 2011 Daniel Luna\n\n",
-     [print_record(RecDef) || RecDef <- Records]],
+     [["-record(", camel_case_to_underscore(Name), ", {\n",
+       "          ", string:join(Fields, ",\n          "),
+       "}).\n\n"] || {Name, Fields} <- Records]],
   io:format("~s", [Data]).
 
-accumulate_records(Xml, Acc) ->
+accumulate_transport_record(_Xml, []) -> [{"FixTransport", []}];
+accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
+  Header =
+    [camel_case_to_underscore(attr(name, E)) ||
+      #xmlElement{name = field} = E <- children_of_child(header, Xml)],
+  Trailer =
+    [camel_case_to_underscore(attr(name, E)) ||
+      #xmlElement{name = field} = E <- children_of_child(trailer, Xml)],
+  [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
+
+accumulate_message_records(Xml, Acc) ->
   lists:foldl(
     fun add_record/2,
     Acc,
@@ -62,15 +61,6 @@ add_record(#xmlElement{name = message} = Msg, Acc) ->
       [{Name, lists:sort(Fields)} | Acc]
   end;
 add_record(#xmlText{}, Acc) -> Acc.
-
-print_record({Name, Fields}) ->
-  RecName = camel_case_to_underscore(Name),
-  ["-record(", RecName, ", {\n",
-   "  ", string:join(Fields, ",\n  "),
-   "}).\n\n"].
-
-create_record_field(Element, _Xml) ->
-  ["  ", camel_case_to_underscore(attr(name, Element)), ",\n"].
 
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
