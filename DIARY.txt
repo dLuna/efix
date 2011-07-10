@@ -286,3 +286,14 @@ glitch. :-(
 22:00
 
 Two hours to go.
+
+22:30
+
+Starting to see how repeating groups can be implemented.  And a way to
+handle components better.  Probably not possible during Spawnfest
+though.  Will decrease that crazy 24k line record definition file.
+
+I could start with making separate records/parsing for components and
+see how much that helps.  If it doesn't then the next step is to go
+back to key-value lists for non required fields, and only have record
+fields for required fields.
