@@ -10,15 +10,11 @@
 -include("../include/fix_messages.hrl").
 
 decode(FIX0) ->
-  {FIX1, Header} = header(FIX0, []),
-  {FIX2, Message} = message(lks(msg_type, Header), FIX1),
-  Trailer = trailer(FIX2, []),
-  check_checksum(FIX0, lks(check_sum, Trailer)),
-  Header ++ Message ++ Trailer.
-
-lks(Key, List) ->
-  {value, {Key, Value}} = lists:keysearch(Key, 1, List),
-  Value.
+  {FIX1, Header} = header(FIX0, #fix_transport{}),
+  {FIX2, Message} = message(Header#fix_transport.msg_type, FIX1),
+  Transport = trailer(FIX2, Header),
+  check_checksum(FIX0, Transport#fix_transport.check_sum),
+  {Transport, Message}.
 
 check_checksum(All, CheckSum) ->
   List = lists:sublist(All, length(All) - 7),

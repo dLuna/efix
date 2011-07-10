@@ -2,22 +2,24 @@ In no particular order or priority:
 
 * Component handling in FIX5.0
 
-* The parser returns a list of Key, Value pairs, this should be
-  changed to make use of records.
-
-* Proper testing of checksum
-
-* Handling of encrypted messages
-
-* Handle all types, PARTIALLY FIXED. Handles all types that are in the
-  test files from QuickFIX
-
 * Check that mandatory items are there
 
 * I suspect that my code will hande repeating sequences badly.
   Test/fix.
 
 * Handle MULTIPLEXXX types for enumerated types.
+
+
+Things I will not complete during the competition:
+
+* Handling of encrypted messages
+
+* Proper testing of checksum
+
+* Handle all types, PARTIALLY FIXED. Handles all types that are in the
+  test files from QuickFIX. It is trivial to add as soon as I have a
+  test message with a particular type.
+
 
 THING THAT ARE OUT OF SCOPE:
 

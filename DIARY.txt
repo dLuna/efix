@@ -180,3 +180,19 @@ Back with a full stomach.  Great!
 
 Hopefully this means less crappy code... :-)
 
+04:38
+
+Yay!  I'm back where I was a few hours ago.  Except now I return a
+record instead of key value pairs.
+
+04:45
+
+My line count has gone down.  I counted a file I shouldn't have.
+
+So 519 lines of written code.  76804 lines of generated code.  I
+wonder if I can decrease those 519 lines further.
+
+There are probably speedups possible.  The code generation is really,
+really slow.  On the other hand, it's XML, and I don't really do any
+optimisations with regards to accessing items in the structure.
+
