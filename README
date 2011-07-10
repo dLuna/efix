@@ -5,12 +5,14 @@ more information about FIX.  After registering you can download the
 specification from http://fixprotocol.org/
 
 To is a library and not really a runnable system.  If you want to run
-it anyway do:
+it anyway you can do:
 
 > make
 > bin/run
 
+(2566@hellboy)1> fix:decode("8=FIX.4.2\x019=178\x0135=8\x0149=PHLX\x0156=PERS\x0152=20071123-05:30:00.000\x0111=ATOMNOCCC9990900\x0120=3\x01150=E\x0139=E\x0155=MSFT\x01167=CS\x0154=1\x0138=15\x0140=2\x0144=15\x0158=PHLX EQUITY TESTING\x0159=0\x0147=C\x0132=0\x0131=0\x01151=15\x0114=0\x016=0\x0110=128\0x01").
 
+(2566@hellboy)2> fix:decode("8=FIX.4.2\x019=65\x0135=A\x0149=SERVER\x0156=CLIENT\x0134=177\x0152=20090107-18:15:16\x0198=0\x01108=30\x0110=062\x01").
 
 Differences from specification:
 
@@ -23,3 +25,20 @@ FIX 4.4:
   MassCancelRejectReason is of type CHAR according to spec but has an
   enumeration out of range (99).  Thus this implementation user
   STRING.
+
+
+For #spawnfest:
+
+  There is a diary of my progress in DIARY.txt
+
+  make test will fail a lot.  This is by design.  Most of the tests
+  are created to test proper error behaviour.  If a test exits via
+  throw with a reasonable exit value I consider the test successful.
+  Unfortunately a lot of the tests in QuickFix are missing the
+  mandatory field BodyLength.  I can only assume that this field is
+  normally added by the QuickFIX test engine normally.  I'll have to
+  rerun all the tests when I have an enviroment with the FIX parser
+  listening to a port.
+
+  TODO.txt contains a list of all the features of FIX which are not
+  supported yet.

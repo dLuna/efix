@@ -218,3 +218,12 @@ Time for bed.
 
 Time for breakfast.  Less than 10 hours to go.
 
+It seems like all almost all the tests "pass".  I use scare quotes
+since most of the tests are made to fail.  The ones that should fail,
+fail with a throw, which is something which is easily converted to
+a decent error message to the client.
+
+15:14
+
+Doing some cleanup and writing basic documentation for the #spawnfest
+judges.

@@ -2,21 +2,39 @@ In no particular order or priority:
 
 * Component handling in FIX5.0
 
-* I suspect that my code will hande repeating sequences badly.
-  Test/fix.
-
-* Handle MULTIPLEXXX types for enumerated types.
+* Transport layer/Message layer for FIXT1.1/FIX5.0(sp?).  May or may
+  not be a won't fix.  Depending on time.
 
 
 Things I will not complete during the competition:
 
 * Handling of encrypted messages
 
-* Proper testing of checksum
+* Proper testing of checksum.  Since I test a checksum I generated
+  myself it's not really that much of a test.  Trivial to test as soon
+  as the fix parser is hooked up with a port listener.  Then the
+  Quicktest test suite can generate checksums for me to test.
 
-* Handle all types, PARTIALLY FIXED. Handles all types that are in the
-  test files from QuickFIX. It is trivial to add as soon as I have a
-  test message with a particular type.
+* Handle all types. Handles all types that are in the test files from
+  QuickFIX.  It is trivial to add more as soon as I have a test
+  message with a particular type.  Out of scope for #spawnfest
+
+* Proper error handling for types.  They should throw and not crash.
+  This is currently the only part of the system that fails without
+  throwing.
+
+* Handle MULTIPLEXXX types for enumerated types.  WON'T FIX.  Don't
+  have any test data.
+
+* Checking of BodyLength
+
+* I suspect that my code will hande repeating sequences badly.
+  Test/fix.  I don't have any test data, so would have to write some
+  first.  Probably won't have time for that during the competition.
+
+* Give error when field is present more than once.
+
+* The DATA type should be handled.
 
 
 THING THAT ARE OUT OF SCOPE:
@@ -28,3 +46,6 @@ full FIX protocol.
 * Checking of sequence numbers
 
 * Checking user credentials
+
+* Handling of ApplVerId.  I.e. message version wrapped in the fix
+  transport layer.
