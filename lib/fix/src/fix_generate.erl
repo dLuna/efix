@@ -241,6 +241,9 @@ components(Xml) ->
   catch _:_ -> [] %% No components in early FIX
   end.
 
+%% FIXME: Every place that calls this function should be updated to
+%% handle components and repeating groups.  That will decrease the 24k
+%% line record definitions, and also add support for repeating groups.
 expanded_fields(List, Components) ->
   lists:flatten(
     [case FC of
