@@ -4555,7 +4555,7 @@
   <field number='136' name='NoMiscFees' type='NUMINGROUP' />
   <field number='137' name='MiscFeeAmt' type='AMT' />
   <field number='138' name='MiscFeeCurr' type='CURRENCY' />
-  <field number='139' name='MiscFeeType' type='CHAR'>
+  <field number='139' name='MiscFeeType' type='STRING'>
    <value enum='1' description='REG' />
    <value enum='10' description='TRANSACTION' />
    <value enum='11' description='CONVERSION' />
@@ -5900,7 +5900,7 @@
    <value enum='6' description='CXLORDERSTRDSESSION' />
    <value enum='7' description='CXLALLORDERS' />
   </field>
-  <field number='532' name='MassCancelRejectReason' type='CHAR'>
+  <field number='532' name='MassCancelRejectReason' type='STRING'>
    <value enum='0' description='MASSCXLNOTSUPPORTED' />
    <value enum='1' description='INVALIDSECURITY' />
    <value enum='2' description='INVALIDUNDERLYING' />
