@@ -1,1 +1,12 @@
 This is a FIX parser written in Erlang.
+
+See http://en.wikipedia.org/wiki/Financial_Information_eXchange for
+more information about FIX.  After registering you can download the
+specification from http://fixprotocol.org/
+
+To is a library and not really a runnable system.  If you want to run
+it anyway do:
+
+> make
+> bin/run
+
