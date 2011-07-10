@@ -31,7 +31,8 @@ format_hrl(F, Files) ->
        "}).\n\n"] || {Name, Fields} <- Records]],
   io:format("~s", [Data]).
 
-accumulate_transport_record(_Xml, []) -> [{"FixTransport", []}];
+accumulate_transport_record(Xml, []) ->
+  accumulate_transport_record(Xml, [{"FixTransport", []}]);
 accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
   Header =
     [camel_case_to_underscore(attr(name, E)) ||
