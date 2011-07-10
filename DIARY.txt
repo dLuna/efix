@@ -240,3 +240,10 @@ guess it's time to do that now.
 17:31
 
 Stupid repeating groups.  And components.
+
+18:42
+
+Everything seems to work fine.
+
+Only major thing still to do is repeating groups.  I wonder if I can
+get faster compile times cause it's starting to be silly.

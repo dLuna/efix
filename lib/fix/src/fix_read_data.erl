@@ -14,14 +14,13 @@
 %% not necessary since all fields are terminated by SOH.  (And we
 %% crash for bad data anyway.)
 
-%% Char type in fix 4.0 looks a lot like a string in 4.2 and later
-fix40(char, Data) -> string(Data);
+fix40(char, Data) -> string(Data); %% Char renamed to string in 4.2
 fix40(float, Data) -> float(Data);
 fix40(int, Data) -> int(Data);
 fix40(time, Data) -> time(Data);
 fix40(Type, Data) -> throw({not_yet_implemented_type, fix40, Type, Data}).
 
-fix41(char, Data) -> string(Data);
+fix41(char, Data) -> string(Data); %% Char renamed to string in 4.2
 fix41(float, Data) -> float(Data);
 fix41(int, Data) -> int(Data);
 fix41(time, Data) -> time(Data);

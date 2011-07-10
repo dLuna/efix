@@ -1,10 +1,22 @@
+For #spawnfest:
+
+  There is a diary of my progress in DIARY.txt
+
+  "make test" fails a lot.  This is by design.  Many of the tests are
+  created to test proper error behaviour.  If a test exits via throw
+  with a reasonable exit value I consider the test successful.
+
+  TODO.txt contains a list of all the features of FIX which are not
+  supported yet.
+
+
 This is a FIX parser written in Erlang.
 
 See http://en.wikipedia.org/wiki/Financial_Information_eXchange for
 more information about FIX.  After registering you can download the
 specification from http://fixprotocol.org/
 
-To is a library and not really a runnable system.  If you want to run
+It is a library and not really a runnable system.  If you want to run
 it anyway you can do:
 
 > make
@@ -28,19 +40,3 @@ FIX 4.4:
   implementation uses STRING.  (This is also consistent with later
   versions of FIX.)
 
-
-For #spawnfest:
-
-  There is a diary of my progress in DIARY.txt
-
-  make test will fail a lot.  This is by design.  Most of the tests
-  are created to test proper error behaviour.  If a test exits via
-  throw with a reasonable exit value I consider the test successful.
-  Unfortunately a lot of the tests in QuickFix are missing the
-  mandatory field BodyLength.  I can only assume that this field is
-  normally added by the QuickFIX test engine normally.  I'll have to
-  rerun all the tests when I have an enviroment with the FIX parser
-  listening to a port.
-
-  TODO.txt contains a list of all the features of FIX which are not
-  supported yet.
