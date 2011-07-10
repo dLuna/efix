@@ -61,7 +61,9 @@ targets: $(TGT_BIN) $(TGT_SBIN) $(TGT_ETC) $(TGT_LIB)
 
 # The test target
 .PHONY: test
-test: all $(TGT_TEST)
+test: $(TGT_TEST)
+
+$(TGT_TEST): all
 
 .PHONY: clean
 clean:
