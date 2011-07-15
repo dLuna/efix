@@ -84,8 +84,8 @@ generate_fix_version(Xml) ->
                  end]).
 
 generate_header_parser(Xml) ->
-  [[single_field_parser("header", Element, Xml) ||
-     #xmlElement{name = field} = Element <- children_of_child(header, Xml)],
+  [[single_field_parser("header", E, Xml) ||
+     E <- expanded_fields(children_of_child(header, Xml), components(Xml))],
    "header(Rest, Acc) ->\n"
    "  {Rest, Acc}.\n\n"].
 
@@ -116,8 +116,8 @@ generate_message_typed_dispatcher(Description, Enum, Xml) ->
 
 generate_message_type_handler(Msg, Xml) ->
   MsgName = camel_case_to_underscore(attr(name, Msg)),
-  [[single_field_parser(MsgName, Field, Xml) 
-    || #xmlElement{name = field} = Field <- Msg#xmlElement.content],
+  [[single_field_parser(MsgName, E, Xml) ||
+    E <- expanded_fields(Msg#xmlElement.content, components(Xml))],
    MsgName, "(Rest, Acc) ->\n"
    "  {Rest, verify_record(Acc)}.\n\n"].
 
