@@ -32,17 +32,17 @@ accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
   Components = components(Xml),
   Header =
     [camel_case_to_underscore(attr(name, E)) ||
-      E <- expanded_fields(children_of_child(header, Xml), Components)],
+      E <- expanded_fields(header(Xml), Components)],
   Trailer =
     [camel_case_to_underscore(attr(name, E)) ||
-      E <- expanded_fields(children_of_child(trailer, Xml), Components)],
+      E <- expanded_fields(trailer(Xml), Components)],
   [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
 
 accumulate_message_records(Xml, Acc) ->
   Components = components(Xml),
   lists:foldl(fun(Msg, A) -> add_record(Msg, A, Components) end,
               Acc,
-              children_of_child(messages, Xml)).
+              messages(Xml)).
 
 add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
   Name = attr(name, Msg),
@@ -85,7 +85,7 @@ generate_fix_version(Xml) ->
 
 generate_header_parser(Xml) ->
   [[single_field_parser("header", E, Xml) ||
-     E <- expanded_fields(children_of_child(header, Xml), components(Xml))],
+     E <- expanded_fields(header(Xml), components(Xml))],
    "header(Rest, Acc) ->\n"
    "  {Rest, Acc}.\n\n"].
 
@@ -96,13 +96,12 @@ generate_message_parser(Xml) ->
    "message(MsgType, _Data) ->\n"
    "  throw({unknown_message_type, MsgType}).\n\n",
    [generate_message_type_handler(E, Xml) ||
-     #xmlElement{name = message} = E <- children_of_child(messages, Xml)]].
+     #xmlElement{name = message} = E <- messages(Xml)]].
 
 generate_message_typed_dispatcher(Description, Enum, Xml) ->
   Atom = quote_atom(string:to_lower(Description)),
   case [camel_case_to_underscore(attr(name, E)) ||
-         #xmlElement{name = message} = E <-
-           children_of_child(messages, Xml),
+         #xmlElement{name = message} = E <- messages(Xml),
          attr(msgtype, E) =:= Enum] of
     [] ->
       %% FIXME: With FIXT there is a transport layer and a message
@@ -123,7 +122,7 @@ generate_message_type_handler(Msg, Xml) ->
 
 generate_trailer_parser(Xml) ->
   [[single_field_parser("trailer", E, Xml) ||
-     E <- expanded_fields(children_of_child(trailer, Xml), components(Xml))],
+     E <- expanded_fields(trailer(Xml), components(Xml))],
    "trailer(\"\", Acc) ->\n"
    "  verify_record(Acc);\n"
    "trailer([C1, $= | _], Acc) ->\n"
@@ -141,15 +140,15 @@ generate_verify_record(Xml) ->
   Components = components(Xml),
   Header =
     [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      E <- expanded_fields(children_of_child(header, Xml), Components)],
+      E <- expanded_fields(header(Xml), Components)],
   Trailer =
     [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      E <- expanded_fields(children_of_child(trailer, Xml), Components)],
+      E <- expanded_fields(trailer(Xml), Components)],
   Messages =
     [{camel_case_to_underscore(attr(name, Msg)),
       [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
         E <- expanded_fields(Msg#xmlElement.content, Components)]} ||
-      #xmlElement{name = message} = Msg <- children_of_child(messages, Xml)],
+      #xmlElement{name = message} = Msg <- messages(Xml)],
   [[["verify_record(#", Record, "{} = Data) ->\n"
      "  case Data of\n",
      [["    #", Record, "{", Field, " = undefined} ->\n"
@@ -195,7 +194,7 @@ rec_name(Other) -> Other.
 
 generate_enum_to_value(Xml) ->
   [[generate_enum_to_value_field(Field, generate_fix_version(Xml)) ||
-     #xmlElement{name = field} = Field <- children_of_child(fields, Xml)],
+     #xmlElement{name = field} = Field <- fields(Xml)],
    "enum_to_value(Type, Value) ->\n"
    "  throw({unknown_enum_value, Type, Value}).\n"].
 
@@ -236,10 +235,14 @@ children_of_child(Key, #xmlElement{content = Content}) ->
   {value, Result} = lists:keysearch(Key, #xmlElement.name, Content),
   Result#xmlElement.content.
 
+header(Xml) -> children_of_child(header, Xml).
+messages(Xml) -> children_of_child(messages, Xml).
+trailer(Xml) -> children_of_child(trailer, Xml).
 components(Xml) ->
   try children_of_child(components, Xml)
   catch _:_ -> [] %% No components in early FIX
   end.
+fields(Xml) -> children_of_child(fields, Xml).
 
 %% FIXME: Every place that calls this function should be updated to
 %% handle components and repeating groups.  That will decrease the 24k
@@ -258,7 +261,7 @@ expanded_fields(List, Components) ->
      end || #xmlElement{} = FC <- List]).
 
 field_type_data(Name, Xml) ->
-  [V] = [Element || #xmlElement{} = Element <- children_of_child(fields, Xml),
+  [V] = [Element || #xmlElement{} = Element <- fields(Xml),
                     attr(name, Element) =:= Name],
   V.
 
