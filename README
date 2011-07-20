@@ -1,25 +1,3 @@
-For #spawnfest:
-
-  I'm sorry about the size of this project.  I was expecting something
-  a lot smaller.  600 lines of code.  100,000 lines of generated code.
-
-  There is a diary of my progress in DIARY.txt
-
-  "make test" returns "TESTFILE: PERCENT SUCCESS".  As you can see
-  it's nowhere close to 100% everywhere.  This is by design.  Many of
-  the tests are created to test proper error behaviour.  If a test
-  exits via throw with a reasonable exit value I consider the test
-  successful.  Note that FIXT is in many ways broken.  Full test
-  results can be viewed in full_test_results.txt
-
-  Files written by me are fix.erl, fix_generate.erl, fix_generate.aux,
-  fix_read_data.erl, and fix_test.erl.  The rest are automatically
-  generated.  They all look the same, so read one of them and be happy
-  with that.
-
-  Rules.mk can be fun to read as well.  If you are masochistic.
-
-
 This is a FIX parser written in Erlang.  Support is more or less
 complete for FIX versions 4.0 to 4.4.  It is still pending for FIX
 5.0.
