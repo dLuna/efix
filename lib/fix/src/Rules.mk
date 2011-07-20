@@ -8,8 +8,7 @@ SRCS_$(d)       := $(wildcard $(d)/*.erl)
 XML_$(d)	:= $(wildcard $(d)/../priv/*.xml)
 GEN_$(d)        := $(XML_$(d):$(d)/../priv/%.xml=$(d)/%.erl)
 GEN_TGTS_$(d)	:= $(GEN_$(d):$(d)/%.erl=$(d)/../ebin/%.beam) \
-			$(d)/../include/fix_messages.hrl \
-			$(d)/../include/fix_transport.hrl
+			$(d)/../include/fix_records.hrl
 TGTS_$(d)	:= $(SRCS_$(d):$(d)/%.erl=$(d)/../ebin/%.beam)
 DEPS_$(d)	:= $(TGTS_$(d):%.beam=%.d)
 
@@ -27,20 +26,14 @@ $(d)/../ebin/%.d: $(d)/%.erl
 .SECONDEXPANSION:
 $(GEN_$(d)): $(d)/../priv/$$(basename $$(@F)).xml \
 	  $(d)/../ebin/fix_generate.beam $(d)/fix_generate.aux \
-	  $(d)/../include/fix_transport.hrl $(d)/../include/fix_messages.hrl
+	  $(d)/../include/fix_records.hrl
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate parser $(<) \
 	  -s erlang halt > $(@)
 
-$(d)/../include/fix_transport.hrl: $(d)/../priv/fixt11.xml \
-	  $(d)/../priv/fix42.xml  \
+$(d)/../include/fix_records.hrl: $(XML_$(d)) \
 	  $(d)/../ebin/fix_generate.beam
 	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
-	  transport_hrl $(^) -s erlang halt > $(@)
-
-$(d)/../include/fix_messages.hrl: $(XML_$(d)) \
-	  $(d)/../ebin/fix_generate.beam
-	$(ERL) -pa $(@D)/../ebin -noshell -run fix_generate \
-	  messages_hrl $(^) -s erlang halt > $(@)
+	  hrl $(^) -s erlang halt > $(@)
 
 TGT_TEST_$(d)	:= $(d)/fix_test
 

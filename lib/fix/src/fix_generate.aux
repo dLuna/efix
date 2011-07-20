@@ -6,8 +6,7 @@
 -module(%%VERSION%%).
 -author('Daniel Luna <daniel@lunas.se>').
 -export([decode/1]).
--include("../include/fix_transport.hrl").
--include("../include/fix_messages.hrl").
+-include("../include/fix_records.hrl").
 
 decode(FIX0) ->
   {FIX1, Header} = header(FIX0, #fix_transport{}),
@@ -34,3 +33,4 @@ check_checksum(All, CheckSum) ->
     false ->
       throw({invalid_checksum, CS, Sum})
   end.
+

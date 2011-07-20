@@ -4,20 +4,14 @@
 
 -module(fix_generate).
 -author('Daniel Luna <daniel@lunas.se>').
--export([parser/1, transport_hrl/1, messages_hrl/1]).
+-export([parser/1, hrl/1]).
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-transport_hrl(Files) ->
-  format_hrl(fun accumulate_transport_record/2, Files).
-
-messages_hrl(Files) ->
-  format_hrl(fun accumulate_message_records/2, Files).
-
-format_hrl(F, Files) ->
+hrl(Files) ->
   Xmls = [begin {Xml, ""} = xmerl_scan:file(File), Xml end ||
            File <- Files, filename:extension(File) =:= ".xml"],
-  Records = lists:foldl(F, [], Xmls),
+  Records = lists:foldl(fun accumulate_records/2, [], Xmls),
   Data = ["%% -*- erlang-indent-level: 2 -*-\n"
           "%% @author Daniel Luna <daniel@lunas.se>\n"
           "%% @copyright 2011 Daniel Luna\n\n",
@@ -26,36 +20,37 @@ format_hrl(F, Files) ->
             "}).\n\n"] || {Name, Fields} <- Records]],
   io:format("~s", [Data]).
 
-accumulate_transport_record(Xml, []) ->
-  accumulate_transport_record(Xml, [{"FixTransport", ["message"]}]);
-accumulate_transport_record(Xml, [{"FixTransport", Values}]) ->
-  Components = components(Xml),
-  Header =
-    [camel_case_to_underscore(attr(name, E)) ||
-      E <- expanded_fields(header(Xml), Components)],
-  Trailer =
-    [camel_case_to_underscore(attr(name, E)) ||
-      E <- expanded_fields(trailer(Xml), Components)],
-  [{"FixTransport", lists:umerge(lists:sort(Header ++ Trailer), Values)}].
+accumulate_records(Xml, Acc0) ->
+  Header = record_fields(header(Xml)),
+  Trailer = record_fields(trailer(Xml)),
+  Acc1 = update_record_def({"FixTransport", ["message" | Header ++ Trailer]},
+                           Acc0),
+  Acc2 = update_record_defs(messages(Xml), Acc1),
+  Acc3 = update_record_defs(components(Xml), Acc2),
+  update_record_defs(repeating_groups(Xml), Acc3).
 
-accumulate_message_records(Xml, Acc) ->
-  Components = components(Xml),
-  lists:foldl(fun(Msg, A) -> add_record(Msg, A, Components) end,
-              Acc,
-              messages(Xml)).
+update_record_defs(Defs, Acc) ->
+  lists:foldl(fun update_record_def/2, Acc, Defs).
 
-add_record(#xmlElement{name = message} = Msg, Acc, Components) ->
-  Name = attr(name, Msg),
-  Fields = [camel_case_to_underscore(attr(name, E)) ||
-             E <- expanded_fields(Msg#xmlElement.content, Components)],
-  case lists:keysearch(Name, 1, Acc) of
-    {value, {Name, Values}} ->
-      NewValues = lists:umerge(lists:sort(Fields), Values),
-      lists:keyreplace(Name, 1, Acc, {Name, NewValues});
-    false ->
-      [{Name, lists:sort(Fields)} | Acc]
-  end;
-add_record(#xmlText{}, Acc, _Components) -> Acc.
+update_record_def(#xmlText{}, Acc) -> Acc;
+update_record_def({undefined, #xmlElement{} = E}, Acc) ->
+  update_record_def({attr(name, E), record_fields(E#xmlElement.content)}, Acc);
+update_record_def({Prefix, #xmlElement{} = E}, Acc) ->
+  update_record_def({Prefix ++ attr(name, E),
+                     record_fields(E#xmlElement.content)}, Acc);
+update_record_def(#xmlElement{} = E, Acc) ->
+  update_record_def({attr(name, E), record_fields(E#xmlElement.content)}, Acc);
+update_record_def({Name, Fields}, Acc) ->
+  Sorted = lists:sort(Fields),
+  orddict:update(Name, fun(OldFields) -> lists:umerge(OldFields, Sorted) end,
+                 Sorted, Acc).
+
+record_fields(List) ->
+  [camel_case_to_underscore(attr(name, E)) || #xmlElement{} = E <- List].
+
+record_fields_required(List) ->
+  [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
+    #xmlElement{} = E <- List].
 
 parser(XmlFile) ->
   {Xml, ""} = xmerl_scan:file(XmlFile),
@@ -67,6 +62,7 @@ parser(XmlFile) ->
           generate_header_parser(Xml),
           generate_message_parser(Xml),
           generate_trailer_parser(Xml),
+          generate_group_parser(Xml),
           generate_enum_to_value(Xml),
           generate_verify_record(Xml)],
   io:format("~s", [Data]).
@@ -84,8 +80,7 @@ generate_fix_version(Xml) ->
                  end]).
 
 generate_header_parser(Xml) ->
-  [[single_field_parser("header", E, Xml) ||
-     E <- expanded_fields(header(Xml), components(Xml))],
+  [[single_field_parser("header", E, Xml) || E <- header(Xml)],
    "header(Rest, Acc) ->\n"
    "  {Rest, Acc}.\n\n"].
 
@@ -115,14 +110,12 @@ generate_message_typed_dispatcher(Description, Enum, Xml) ->
 
 generate_message_type_handler(Msg, Xml) ->
   MsgName = camel_case_to_underscore(attr(name, Msg)),
-  [[single_field_parser(MsgName, E, Xml) ||
-    E <- expanded_fields(Msg#xmlElement.content, components(Xml))],
+  [[single_field_parser(MsgName, E, Xml) || E <- Msg#xmlElement.content],
    MsgName, "(Rest, Acc) ->\n"
    "  {Rest, verify_record(Acc)}.\n\n"].
 
 generate_trailer_parser(Xml) ->
-  [[single_field_parser("trailer", E, Xml) ||
-     E <- expanded_fields(trailer(Xml), components(Xml))],
+  [[single_field_parser("trailer", E, Xml) || E <- trailer(Xml)],
    "trailer(\"\", Acc) ->\n"
    "  verify_record(Acc);\n"
    "trailer([C1, $= | _], Acc) ->\n"
@@ -134,20 +127,49 @@ generate_trailer_parser(Xml) ->
    "trailer([C1, C2, C3, C4, $= | _], Acc) ->\n"
    "  throw({unexpected_field, [C1, C2, C3, C4], Acc});\n"
    "trailer(Data, Acc) ->\n"
-   "  throw({unexpected_data, Data, Acc}).\n"].
+   "  throw({unexpected_data, Data, Acc}).\n\n"].
+
+generate_group_parser(Xml) ->
+  Groups = repeating_groups(Xml),
+  FixVersion = generate_fix_version(Xml),
+  [begin
+     Name = attr(name, Group),
+     FuncName = camel_case_to_underscore(
+                  case Prefix of undefined -> [];
+                    _ -> Prefix end ++ Name),
+     [[
+       begin
+         FieldName = attr(name, Field),
+         FieldTypeData = field_type_data(FieldName, Xml),
+         N = attr(number, FieldTypeData),
+         Type = string:to_lower(attr(type, FieldTypeData)),
+         RecElem =  camel_case_to_underscore(FieldName),
+         [FuncName, "(\"", N, "=\" ++ String, [Acc | AccRest]) ->\n"
+          "  {FieldData, Rest} = fix_read_data:", FixVersion, "(",
+          Type, ", String),\n",
+          "  case Acc of\n"
+          "    #", FuncName, "{", RecElem, " = undefined} ->\n"
+          "      ", FuncName, "(Rest, [Acc#", FuncName, "{", RecElem,
+          " = FieldData} | AccRest]);\n"
+          "    _ ->\n"
+          "      ", FuncName, "(Rest, [#", FuncName, "{", RecElem,
+          " = FieldData}, Acc | AccRest])\n"
+          "  end;\n"
+         ]
+       end || #xmlElement{name = field} = Field <- Group#xmlElement.content],
+      FuncName, "(Rest, Acc) ->\n"
+      "  {Rest, Acc}.\n\n"
+     ]
+   end
+   ||
+    {Prefix, Group} <- Groups].
 
 generate_verify_record(Xml) ->
-  Components = components(Xml),
-  Header =
-    [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      E <- expanded_fields(header(Xml), Components)],
-  Trailer =
-    [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-      E <- expanded_fields(trailer(Xml), Components)],
+  Header = record_fields_required(header(Xml)),
+  Trailer = record_fields_required(trailer(Xml)),
   Messages =
     [{camel_case_to_underscore(attr(name, Msg)),
-      [{camel_case_to_underscore(attr(name, E)), attr(required, E)} ||
-        E <- expanded_fields(Msg#xmlElement.content, Components)]} ||
+      record_fields_required(Msg#xmlElement.content)} ||
       #xmlElement{name = message} = Msg <- messages(Xml)],
   [[["verify_record(#", Record, "{} = Data) ->\n"
      "  case Data of\n",
@@ -166,27 +188,47 @@ generate_verify_record(Xml) ->
      "  end;\n"]  ||
      {Record, Fields} <- [{"fix_transport", Header ++ Trailer} | Messages]],
    "verify_record(Data) ->\n"
-   "  throw({unknown_record, Data})."].
+   "  throw({unknown_record, Data}).\n\n"].
 
-single_field_parser(MsgName, Field, Xml) ->
-  FieldName = attr(name, Field),
-  FieldTypeData = field_type_data(FieldName, Xml),
-  N = attr(number, FieldTypeData),
-  Type = string:to_lower(attr(type, FieldTypeData)),
-  FieldKey = camel_case_to_underscore(FieldName),
+single_field_parser(_FuncName, #xmlText{}, _Xml) -> [];
+single_field_parser(FuncName, #xmlElement{name = component}, Xml) ->
+  %% FIXME: do_something;
+  [];
+single_field_parser(FuncName, Element, Xml) ->
+  ElementName = attr(name, Element),
+  ElementTypeData = field_type_data(ElementName, Xml),
+  N = attr(number, ElementTypeData),
+  Type = string:to_lower(attr(type, ElementTypeData)),
+  ElementKey = camel_case_to_underscore(ElementName),
   FixVersion = generate_fix_version(Xml),
-  MaybeEnumToValue =
-    case [Enum || #xmlElement{name = value} = Enum <-
-                    FieldTypeData#xmlElement.content] of
-      [] -> "  FieldData = FieldData0,\n";
-      _ -> ["  FieldData = enum_to_value(\"", N, "\", FieldData0),\n"]
-    end,
-  [MsgName, "(\"", N, "=\" ++ String, Acc) ->\n"
-   "  {FieldData0, Rest} = fix_read_data:", FixVersion, "(",
-   Type, ", String),\n",
-   MaybeEnumToValue,
-   "  ", MsgName, "(Rest, Acc#", rec_name(MsgName), "{", FieldKey,
-   " = FieldData});\n"].
+  case Element of
+    #xmlElement{name = field} ->
+      MaybeEnumToValue =
+        case [Enum || #xmlElement{name = value} = Enum <-
+                        ElementTypeData#xmlElement.content] of
+          [] -> "  FieldData = FieldData0,\n";
+          _ -> ["  FieldData = enum_to_value(\"", N, "\", FieldData0),\n"]
+        end,
+      [FuncName, "(\"", N, "=\" ++ String, Acc) ->\n"
+       "  {FieldData0, Rest} = fix_read_data:", FixVersion, "(",
+       Type, ", String),\n",
+       MaybeEnumToValue,
+       "  ", FuncName, "(Rest, Acc#", rec_name(FuncName), "{", ElementKey,
+       " = FieldData});\n"];
+    #xmlElement{name = group} ->
+      GroupName = [case FuncName of
+                     "header" -> "";
+                     "trailer" -> "";
+                     _ -> FuncName ++ "_"
+                   end, camel_case_to_underscore(ElementName)],
+      [FuncName, "(\"", N, "=\" ++ String, Acc) ->\n"
+       "  {N, Rest0} = fix_read_data:", FixVersion, "(",
+       Type, ", String),\n",
+       "  {Data, Rest} = ", GroupName, "(Rest0, #", GroupName, "{}),\n"
+       %% FIXME: check length?
+       "  ", FuncName, "(Rest, Acc#", rec_name(FuncName), "{", ElementKey,
+       " = Data});\n"]
+  end.
 
 rec_name("header") -> "fix_transport";
 rec_name("trailer") -> "fix_transport";
@@ -196,7 +238,7 @@ generate_enum_to_value(Xml) ->
   [[generate_enum_to_value_field(Field, generate_fix_version(Xml)) ||
      #xmlElement{name = field} = Field <- fields(Xml)],
    "enum_to_value(Type, Value) ->\n"
-   "  throw({unknown_enum_value, Type, Value}).\n"].
+   "  throw({unknown_enum_value, Type, Value}).\n\n"].
 
 generate_enum_to_value_field(Field, FixVersion) ->
   N = attr(number, Field),
@@ -244,25 +286,20 @@ components(Xml) ->
   end.
 fields(Xml) -> children_of_child(fields, Xml).
 
-%% FIXME: Every place that calls this function should be updated to
-%% handle components and repeating groups.  That will decrease the 24k
-%% line record definitions, and also add support for repeating groups.
-expanded_fields(List, Components) ->
+repeating_groups(Xml) ->
   lists:flatten(
-    [case FC of
-       #xmlElement{name = group} ->
-         expanded_fields(FC#xmlElement.content, Components);
-       #xmlElement{name = field} -> FC;
-       #xmlElement{name = component} ->
-         Name = attr(name, FC),
-         [Component] = [C || #xmlElement{} = C <- Components,
-                             attr(name, C) =:= Name],
-         expanded_fields(Component#xmlElement.content, Components)
-     end || #xmlElement{} = FC <- List]).
+    [{undefined, E} || #xmlElement{name = group} = E <- header(Xml)] ++
+      [[{attr(name, M), E} || #xmlElement{name = group} =
+                                E <- M#xmlElement.content]
+       || #xmlElement{name = message} = M <- messages(Xml)] ++
+      [{undefined, E} || #xmlElement{name = group} = E <- trailer(Xml)] ++
+      [[{attr(name, C), E} || #xmlElement{name = group} =
+                                E <- C#xmlElement.content]
+       || #xmlElement{name = component} = C <- components(Xml)]).
 
 field_type_data(Name, Xml) ->
-  [V] = [Element || #xmlElement{} = Element <- fields(Xml),
-                    attr(name, Element) =:= Name],
+  {Name, [V]} = {Name, [Element || #xmlElement{} = Element <- fields(Xml),
+                                   attr(name, Element) =:= Name]},
   V.
 
 %% String functions
