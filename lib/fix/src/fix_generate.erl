@@ -15,7 +15,7 @@ hrl(Files) ->
   Data = ["%% -*- erlang-indent-level: 2 -*-\n"
           "%% @author Daniel Luna <daniel@lunas.se>\n"
           "%% @copyright 2011 Daniel Luna\n\n",
-          [["-record(", camel_case_to_underscore(Name), ", {\n",
+          [["-record(", Name, ", {\n",
             "          ", string:join(Fields, ",\n          "),
             "}).\n\n"] || {Name, Fields} <- Records]],
   io:format("~s", [Data]).
@@ -42,7 +42,8 @@ update_record_def(#xmlElement{} = E, Acc) ->
   update_record_def({attr(name, E), record_fields(E#xmlElement.content)}, Acc);
 update_record_def({Name, Fields}, Acc) ->
   Sorted = lists:sort(Fields),
-  orddict:update(Name, fun(OldFields) -> lists:umerge(OldFields, Sorted) end,
+  orddict:update(camel_case_to_underscore(Name),
+                 fun(OldFields) -> lists:umerge(OldFields, Sorted) end,
                  Sorted, Acc).
 
 record_fields(List) ->
@@ -304,13 +305,31 @@ field_type_data(Name, Xml) ->
 
 %% String functions
 
-camel_case_to_underscore([C | Rest]) ->
-  [C + 32 | remove_camel_case(Rest)].
+camel_case_to_underscore(String) ->
+  tl(remove_camel_case(String)).
 
-remove_camel_case([C | Rest]) when C >= $A, C =< $Z ->
-  [$_, C + 32 | remove_camel_case(Rest)];
-remove_camel_case([C | Rest]) -> 
-  [C | remove_camel_case(Rest)];
+remove_camel_case([C | _] = String) when C >= $A, C =< $Z ->
+  case String of
+    [$C, $P     | Rest] -> "_cp"  ++ remove_camel_case(Rest);
+    [$D, $K     | Rest] -> "_dk"  ++ remove_camel_case(Rest);
+    [$F, $X     | Rest] -> "_fx"  ++ remove_camel_case(Rest);
+    [$G, $T     | Rest] -> "_gt"  ++ remove_camel_case(Rest);
+    [$I, $D     | Rest] -> "_id"  ++ remove_camel_case(Rest);
+    [$M, $D     | Rest] -> "_md"  ++ remove_camel_case(Rest);
+    [$M, $V     | Rest] -> "_mv"  ++ remove_camel_case(Rest);
+    [$N, $T     | Rest] -> "_nt"  ++ remove_camel_case(Rest);
+    [$T, $S     | Rest] -> "_ts"  ++ remove_camel_case(Rest);
+    [$T, $Z     | Rest] -> "_tz"  ++ remove_camel_case(Rest);
+    [$A, $C, $K | Rest] -> "_ack" ++ remove_camel_case(Rest);
+    [$C, $F, $I | Rest] -> "_cfi" ++ remove_camel_case(Rest);
+    [$E, $F, $P | Rest] -> "_efp" ++ remove_camel_case(Rest);
+    [$I, $O, $I | Rest] -> "_ioi" ++ remove_camel_case(Rest);
+    [$R, $F, $Q | Rest] -> "_rfq" ++ remove_camel_case(Rest);
+    [$U, $R, $L | Rest] -> "_url" ++ remove_camel_case(Rest);
+    [$X, $M, $L | Rest] -> "_xml" ++ remove_camel_case(Rest);
+    [C | Rest] -> "_" ++ [C + 32] ++ remove_camel_case(Rest)
+  end;
+remove_camel_case([C | Rest]) -> [C | remove_camel_case(Rest)];
 remove_camel_case([]) -> [].
 
 quote_atom("and") -> "'and'";
